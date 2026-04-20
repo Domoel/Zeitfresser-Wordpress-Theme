@@ -24,6 +24,7 @@ function zeitfresser_register_general_customization_section( $wp_customize ) {
 require dirname( __FILE__ ) . '/default-general.php';
 require dirname( __FILE__ ) . '/container-width/container-width.php';
 require dirname( __FILE__ ) . '/social-links/social-links.php';
+require dirname( __FILE__ ) . '/toc-options.php';
 
 require dirname( __FILE__ ) . '/../post-snippet/default-post-snippet.php';
 require dirname( __FILE__ ) . '/../post-snippet/excerpt/excerpt.php';
