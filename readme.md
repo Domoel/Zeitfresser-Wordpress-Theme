@@ -24,6 +24,12 @@ A performance-optimized, minimalist dark blog theme for WordPress, inspired by t
 </h6>
 <br>
 
+<img width="1176" height="1240" alt="grafik" src="https://github.com/user-attachments/assets/b7f2d4ce-828a-406e-9302-61074688ff74" />
+<br>
+<img width="1800" height="1271" alt="grafik" src="https://github.com/user-attachments/assets/aefff842-8189-48ae-965c-77799667b2a9" />
+
+
+
 ## ✨ Features
 
 ### 🚀 Performance First
