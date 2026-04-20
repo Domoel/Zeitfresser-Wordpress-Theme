@@ -1,10 +1,28 @@
-# Zeitfresser Theme
+<p align="center">
+  <a href="https://ztfr.eu/matrix">
+    <img src="assets/community-badge.png" alt="Join Zeitfresser Matrix Community" height="70" />
+  </a>
+</p>
 
-A performance-optimized, minimalist dark blog theme for WordPress, focused on **privacy, security, and technical content**.
+<h1 align="center">
+Zeitfresser Wordpress Theme
+</span>
+<h4 align="center">
+<span style="display:inline-flex; align-items:center; gap:12px;">
+A performance-optimized, minimalist dark blog theme for WordPress, inspired by the popular Dracula theme.
+</span>
+<p>
 
-Originally based on Daisy Blog, this theme has been heavily refactored, simplified, and extended into a **lean, production-ready custom theme**.
-
----
+<h6 align="center">
+  <a href="https://ztfr.eu">🏰 Website</a>
+  ·
+  <a href="https://ztfr.eu/matrix">📰 Zeitfresser Matrix Community</a>
+  ·
+  <a href="https://social.ztfr.eu/@dome">🐘 Mastodon</a> 
+  ·
+  <a href="https://look.ztfr.eu/#/#support:ztfr.eu">💬 Supportchat</a> 
+</h6>
+<br>
 
 ## ✨ Features
 
