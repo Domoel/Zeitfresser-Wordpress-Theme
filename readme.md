@@ -128,11 +128,11 @@ For best performance:
 - Content utilities (callouts, notes, warnings)
 - Further Core Web Vitals improvements
 
+## 🛠 Development & Support
+
+If you need to get support or want to participate in the active development of this software, you can <a href="https://ztfr.eu/matrix">join our Zeitfresser Matrix Community</a> or the <a href="https://look.ztfr.eu/#/#support:ztfr.eu">Development & Support Channel</a> on Matrix.
+
 ## 📄 License
 
 GPL v2 or later  
 Based on Daisy Blog, heavily modified and optimized.
-
-## 🛠 Development & Support
-
-If you need to get support or want to participate in the active development of this software, you can <a href="https://ztfr.eu/matrix">join our Zeitfresser Matrix Community</a> or the <a href="https://look.ztfr.eu/#/#support:ztfr.eu">Development & Support Channel</a> on Matrix.
