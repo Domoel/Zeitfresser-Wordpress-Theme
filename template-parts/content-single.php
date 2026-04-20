@@ -17,9 +17,18 @@
     $show_hide_author_block = get_theme_mod( 'post_detail_hide_show_author_block', zeitfresser_get_default_post_detail_author_block() );
     $show_hide_social_share = get_theme_mod( 'post_detail_hide_show_social_share', zeitfresser_get_default_post_detail_social_share() );
     $social_share = get_theme_mod( 'post_detail_social_share_options', zeitfresser_get_default_post_detail_social_share_options() );
+    $toc_payload = zeitfresser_build_toc_payload( get_the_ID() );
+    $has_floating_toc = ! empty( $toc_payload['items'] );
 ?>
 
-<h1 class="page-title"><?php the_title(); ?></h1>
+<div class="zeitfresser-article-heading">
+    <h1 class="page-title"><?php the_title(); ?></h1>
+</div>
+
+<?php if ( $has_floating_toc ) : ?>
+    <?php zeitfresser_render_floating_toc( get_the_ID() ); ?>
+<?php endif; ?>
+
 
 <div class="single-post">
 
@@ -110,7 +119,7 @@
         <article>
 
             <div class="inner-article-content">
-                <?php the_content(); ?>
+                <?php echo $toc_payload['content']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
             </div>
 
             <?php

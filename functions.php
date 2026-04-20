@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 if ( ! defined( 'ZEITFRESSER_VERSION' ) ) {
-    define( 'ZEITFRESSER_VERSION', '2.2.0' );
+    define( 'ZEITFRESSER_VERSION', '2.3.6' );
 }
 
 if ( ! defined( 'DAISY_BLOG_VERSION' ) ) {
@@ -20,6 +20,7 @@ if ( ! defined( 'DAISY_BLOG_VERSION' ) ) {
 require get_template_directory() . '/inc/zeitfresser-helpers.php';
 require get_template_directory() . '/inc/legacy-aliases.php';
 require get_template_directory() . '/inc/performance-tools.php';
+require get_template_directory() . '/inc/zeitfresser-toc.php';
 
 /**
  * Theme setup.
@@ -107,6 +108,25 @@ function zeitfresser_widgets_init() {
     );
 }
 add_action( 'widgets_init', 'zeitfresser_widgets_init' );
+
+/**
+ * Enqueue floating TOC assets on single posts.
+ *
+ * @return void
+ */
+function zeitfresser_enqueue_toc_assets() {
+	if ( is_singular( 'post' ) && zeitfresser_has_floating_toc() ) {
+		wp_enqueue_script(
+			'zeitfresser-toc',
+			get_template_directory_uri() . '/js/toc.js',
+			array(),
+			ZEITFRESSER_VERSION,
+			true
+		);
+	}
+}
+add_action( 'wp_enqueue_scripts', 'zeitfresser_enqueue_toc_assets', 20 );
+
 
 /**
  * Return file version using filemtime in production-safe form.
