@@ -35,23 +35,17 @@ A performance-optimized, minimalist dark blog theme for WordPress, inspired by t
 - Reduced image sizes & optimized upload handling
 - Minimal JavaScript footprint (vanilla JS only)
 
----
-
 ### 🧠 Core Web Vitals Optimized
 - No layout shifts (CLS-safe)
 - Optimized Largest Contentful Paint (LCP)
 - Efficient DOM structure
 - Lightweight scroll-based TOC (no heavy libraries)
 
----
-
 ### 🖼️ Image Optimization (Native)
 - Automatic downscaling of large uploads
 - Removed unused intermediate image sizes
 - Balanced image quality vs. file size
 - Optional WebP generation for thumbnails
-
----
 
 ### 📑 Floating Table of Contents (TOC)
 - Editorial-style floating TOC (left side)
@@ -61,8 +55,6 @@ A performance-optimized, minimalist dark blog theme for WordPress, inspired by t
 - Progress indicator
 - Responsive (hidden on smaller screens)
 - Scrollable without visible scrollbar
-
----
 
 ### ⚙️ Customizer Options
 
@@ -77,16 +69,12 @@ Located under **General Options → Article TOC**
   - Default: 3
   - Range: 1–50
 
----
-
 ### 🎨 Design Philosophy
 - Minimalist dark theme
 - Strong focus on readability
 - Accent color driven (purple highlight system)
 - No visual clutter
 - Editorial-style layout inspired by modern tech blogs
-
----
 
 ### 🧹 Clean Code Architecture
 - Removed legacy theme bloat
@@ -95,21 +83,15 @@ Located under **General Options → Article TOC**
 - Centralized configuration handling
 - No unnecessary dependencies
 
----
-
 ### 🔤 Typography
 - Oswald (headings)
 - Roboto (body)
 - Optimized loading and fallback handling
 
----
-
 ### 📱 Responsive
 - Fully responsive layout
 - TOC automatically disabled on smaller screens
 - Optimized mobile navigation
-
----
 
 ## 🛠️ Development Notes
 
@@ -118,15 +100,11 @@ Located under **General Options → Article TOC**
 - Async-first approach where possible
 - Designed for long-form technical content
 
----
-
 ## 📦 Installation
 
 1. Download or clone the repository
 2. Upload the theme to: /wp-content/themes/
 3. Activate the theme in WordPress: Appearance → Themes
-
----
 
 ## ⚡ Recommended Setup
 
@@ -137,8 +115,6 @@ For best performance:
 - Optimize existing images (if migrating from another theme)
 - Use modern hosting (PHP 8+ recommended)
 
----
-
 ## 📌 Roadmap (Optional Ideas)
 
 - Code block enhancements (copy button, syntax highlighting)
@@ -146,17 +122,11 @@ For best performance:
 - Content utilities (callouts, notes, warnings)
 - Further Core Web Vitals improvements
 
----
-
 ## 📄 License
 
 GPL v2 or later  
 Based on Daisy Blog, heavily modified and optimized.
 
----
+## 🛠 Development & Support
 
-## 💬 About
-
-Zeitfresser is designed for **developers, privacy enthusiasts, and technical writers** who want a fast, clean, and distraction-free blogging experience.
-
----
+If you need to get support or want to participate in the active development of this software, you can <a href="https://ztfr.eu/matrix">join our Zeitfresser Matrix Community</a> or the <a href="https://look.ztfr.eu/#/#support:ztfr.eu">Development & Support Channel</a> on Matrix.
