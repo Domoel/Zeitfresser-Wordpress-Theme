@@ -78,10 +78,6 @@ document.addEventListener('DOMContentLoaded', function () {
         document.documentElement.style.setProperty('--zeitfresser-toc-width', tocWidth + 'px');
     }
 
-    /**
-     * ✅ FINAL: Footer Collision ohne Layout-Bruch
-     * Nutzt nur transform statt top/position
-     */
     function handleFooterCollision() {
         if (!isDesktop()) {
             toc.style.transform = '';
@@ -94,7 +90,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var footerRect = footer.getBoundingClientRect();
         var tocRect = toc.getBoundingClientRect();
 
-        var offset = 40;          // finaler Abstand
+        var offset = 40;
         var triggerOffset = Math.min(200, window.innerHeight * 0.2);
 
         var overlap = tocRect.bottom - (footerRect.top - triggerOffset);
@@ -165,7 +161,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         window.requestAnimationFrame(function () {
             syncPosition();
-            handleFooterCollision(); // 👈 stabil integriert
+            handleFooterCollision();
             updateProgress();
             updateActiveHeading();
             ticking = false;
