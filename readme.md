@@ -108,8 +108,7 @@ If you need to get support or want to participate in the active development of t
 
 ## 📄 License
 
-GPL v2 or later  
-Originally based on Daisy Blog, now heavily modified and optimized into an independent theme.
+GPL v2 or later. Originally based on the [Daisy Blog](https://wordpress.org/themes/daisy-blog/) Theme, now heavily modified and optimized into an independent theme.
 
 ## 💬 Final Note
 
