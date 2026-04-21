@@ -32,7 +32,7 @@ A performance-optimized, minimalist dark blog theme for WordPress, inspired by t
 
 Zeitfresser is a custom-built WordPress theme designed with a clear focus: **fast, readable, and distraction-free technical blogging**.
 
-Originally based on Daisy Blog, the theme has evolved into a fully independent, heavily optimized codebase. Every part of the system has been reworked with performance, clarity, and maintainability in mind. The result is not just a styled theme, but a streamlined platform for long-form content.
+Originally based on the pipular [Daisy Blog](https://wordpress.org/themes/daisy-blog/) Theme. However with this version the theme has evolved into a fully independent, heavily optimized codebase. Every part of the system has been reworked with performance, clarity, and maintainability in mind. The result is not just a styled theme, but a streamlined platform for long-form content.
 
 The design follows a minimalist dark aesthetic inspired by Dracula, while placing strong emphasis on typography, structure, and reading flow.
 
