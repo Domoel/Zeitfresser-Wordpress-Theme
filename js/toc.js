@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var toc = document.getElementById('zeitfresser-floating-toc');
     var title = document.querySelector('.zeitfresser-article-heading .page-title, .zeitfresser-article-heading .entry-title, .entry-header .entry-title');
     var progressBar = document.getElementById('zeitfresser-floating-toc-progress');
-    var nav = toc.querySelector('.zeitfresser-floating-toc__nav');
+    var nav = toc ? toc.querySelector('.zeitfresser-floating-toc__nav') : null;
 
     if (!toc || !title) {
         return;
@@ -13,7 +13,6 @@ document.addEventListener('DOMContentLoaded', function () {
     var stickyTop = 100;
     var headingOffset = 88;
     var ticking = false;
-    var isInitialized = false; // 👈 NEW
 
     function isDesktop() {
         return desktopQuery.matches;
@@ -46,8 +45,19 @@ document.addEventListener('DOMContentLoaded', function () {
         var titleRect = title.getBoundingClientRect();
         var scrollTop = window.scrollY || window.pageYOffset || 0;
 
-        var contentColumn = document.querySelector('.inside-page .main-wrapper > *:first-child, .inside-page .main-wrapper .primary-content, .inside-page .main-wrapper #primary, .inside-page .main-wrapper main');
-        var sidebar = document.querySelector('.inside-page .main-wrapper > aside, .inside-page .main-wrapper .widget-area, .inside-page .main-wrapper #secondary, .inside-page .main-wrapper .sidebar');
+        var contentColumn = document.querySelector(
+            '.inside-page .main-wrapper > *:first-child, ' +
+            '.inside-page .main-wrapper .primary-content, ' +
+            '.inside-page .main-wrapper #primary, ' +
+            '.inside-page .main-wrapper main'
+        );
+
+        var sidebar = document.querySelector(
+            '.inside-page .main-wrapper > aside, ' +
+            '.inside-page .main-wrapper .widget-area, ' +
+            '.inside-page .main-wrapper #secondary, ' +
+            '.inside-page .main-wrapper .sidebar'
+        );
 
         var contentRect = contentColumn ? contentColumn.getBoundingClientRect() : titleRect;
         var sidebarRect = sidebar ? sidebar.getBoundingClientRect() : null;
@@ -66,11 +76,35 @@ document.addEventListener('DOMContentLoaded', function () {
         document.documentElement.style.setProperty('--zeitfresser-toc-top', tocTop + 'px');
         document.documentElement.style.setProperty('--zeitfresser-toc-left', tocLeft + 'px');
         document.documentElement.style.setProperty('--zeitfresser-toc-width', tocWidth + 'px');
+    }
 
-        // 👇 NEW: reveal after first correct positioning
-        if (!isInitialized) {
-            toc.classList.add('is-ready');
-            isInitialized = true;
+    /**
+     * ✅ FINAL: Footer Collision ohne Layout-Bruch
+     * Nutzt nur transform statt top/position
+     */
+    function handleFooterCollision() {
+        if (!isDesktop()) {
+            toc.style.transform = '';
+            return;
+        }
+
+        var footer = document.querySelector('footer.site-footer, footer, #colophon');
+        if (!footer) return;
+
+        var footerRect = footer.getBoundingClientRect();
+        var tocRect = toc.getBoundingClientRect();
+
+        var offset = 40;          // finaler Abstand
+        var triggerOffset = Math.min(200, window.innerHeight * 0.2);
+
+        var overlap = tocRect.bottom - (footerRect.top - triggerOffset);
+
+        if (overlap > -offset) {
+            var strength = 0.85;
+            var correction = Math.max(0, (overlap + offset) * strength);
+            toc.style.transform = 'translateY(-' + correction + 'px)';
+        } else {
+            toc.style.transform = '';
         }
     }
 
@@ -90,7 +124,10 @@ document.addEventListener('DOMContentLoaded', function () {
     function updateProgress() {
         if (!progressBar) return;
 
-        var article = document.querySelector('.single-post .post-content article, .single-post .post-content, article.post, article');
+        var article = document.querySelector(
+            '.single-post .post-content article, ' +
+            '.single-post .post-content, article.post, article'
+        );
 
         if (!article) {
             progressBar.style.width = '0%';
@@ -106,6 +143,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function updateActiveHeading() {
         var headings = getHeadings();
+
         if (!headings.length) return;
 
         var currentId = headings[0].target.id;
@@ -127,6 +165,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         window.requestAnimationFrame(function () {
             syncPosition();
+            handleFooterCollision(); // 👈 stabil integriert
             updateProgress();
             updateActiveHeading();
             ticking = false;
@@ -168,8 +207,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Initial run
     syncPosition();
+    handleFooterCollision();
     updateProgress();
     updateActiveHeading();
+
+    requestAnimationFrame(function () {
+        toc.classList.add('is-visible');
+    });
 
     window.addEventListener('scroll', onViewportChange, { passive: true });
     window.addEventListener('resize', onViewportChange, { passive: true });

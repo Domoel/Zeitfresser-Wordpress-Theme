@@ -42,25 +42,33 @@ html{line-height:1.15;-webkit-text-size-adjust:100%}body{margin:0}main{display:b
   left:var(--zeitfresser-toc-left, 24px) !important;
   width:var(--zeitfresser-toc-width) !important;
 
-  opacity:0 !important;
-  transition:opacity .2s ease !important;
-
   max-height:calc(100vh - var(--zeitfresser-toc-top, 100px) - var(--zeitfresser-toc-top-offset, 0px) - 36px) !important;
+
   padding:0 !important;
   border:none !important;
   border-radius:0 !important;
+
   background:transparent !important;
   background-color:transparent !important;
   backdrop-filter:none !important;
   box-shadow:none !important;
+
   overflow:hidden !important;
-  transform:none !important;
+
+  transform:none;
   pointer-events:auto !important;
+
   z-index:80;
+  contain: layout style;
+
+  opacity: 0;
+  transition: opacity 0.12s ease-out;
+
+  will-change: opacity, transform;
 }
 
-.zeitfresser-floating-toc.is-ready{
-  opacity:1 !important;
+.zeitfresser-floating-toc.is-visible{
+  opacity: 1;
 }
 
 .zeitfresser-floating-toc__header{
@@ -130,17 +138,19 @@ html{line-height:1.15;-webkit-text-size-adjust:100%}body{margin:0}main{display:b
   margin:0 !important;
   padding:0 0 0 14px !important;
   border-left:3px solid transparent !important;
-  border-radius:0 !important;
+
   background:none !important;
-  background-color:transparent !important;
-  background-image:none !important;
   box-shadow:none !important;
+
   color:#f7f7fa !important;
   font-size:.92rem !important;
   line-height:1.35 !important;
   font-weight:400 !important;
+
   text-decoration:none !important;
+
   transition:color .18s ease, border-color .18s ease !important;
+
   word-break:normal !important;
   overflow-wrap:normal !important;
 }
@@ -167,13 +177,12 @@ html{line-height:1.15;-webkit-text-size-adjust:100%}body{margin:0}main{display:b
   color:#bd93f9 !important;
   border-left-color:#bd93f9 !important;
   background:none !important;
-  background-color:transparent !important;
-  background-image:none !important;
   outline:none !important;
   box-shadow:none !important;
   text-decoration:none !important;
 }
 
+/* Remove default anchor jump highlight */
 .single-post .entry-content :target,
 .post-content :target,
 .inner-article-content :target,
@@ -181,12 +190,12 @@ html{line-height:1.15;-webkit-text-size-adjust:100%}body{margin:0}main{display:b
 .post-content :focus,
 .inner-article-content :focus{
   background:transparent !important;
-  background-color:transparent !important;
   outline:none !important;
   box-shadow:none !important;
   border:none !important;
 }
 
+/* Offset for anchor scroll */
 .single-post .inner-article-content h2,
 .single-post .inner-article-content h3,
 .single-post .inner-article-content h4,
@@ -196,9 +205,9 @@ html{line-height:1.15;-webkit-text-size-adjust:100%}body{margin:0}main{display:b
   scroll-margin-top:88px;
 }
 
+/* Disable TOC on smaller screens */
 @media only screen and (max-width:1650px){
   .zeitfresser-floating-toc{
     display:none !important;
   }
 }
-
