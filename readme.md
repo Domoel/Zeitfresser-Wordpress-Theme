@@ -9,7 +9,7 @@ Zeitfresser Wordpress Theme
 </h1>
 
 <h4 align="center">
-A performance-optimized, minimalist dark blog theme for WordPress, inspired by the popular Dracula aesthetic and built for long-form technical content.
+A performance-optimized, minimalist dark blog theme for WordPress, inspired by the popular Dracula aesthetic.
 </h4>
 
 <h6 align="center">
