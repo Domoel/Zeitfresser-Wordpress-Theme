@@ -14,6 +14,8 @@ document.addEventListener('DOMContentLoaded', function () {
     var headingOffset = 88;
     var ticking = false;
 
+    var tocBottomOffset = null;
+
     function isDesktop() {
         return desktopQuery.matches;
     }
@@ -32,6 +34,26 @@ document.addEventListener('DOMContentLoaded', function () {
         }).filter(function (item) {
             return !!item.target;
         });
+    }
+
+    function getArticleElement() {
+        return document.querySelector(
+            '.single-post .post-content article, ' +
+            '.single-post .post-content, ' +
+            'article.post, article, ' +
+            '.entry-content'
+        );
+    }
+
+    function getTocBottomOffset() {
+        if (tocBottomOffset !== null) return tocBottomOffset;
+
+        var value = getComputedStyle(document.documentElement)
+            .getPropertyValue('--toc-bottom-offset')
+            .trim();
+
+        tocBottomOffset = parseInt(value, 10) || 12;
+        return tocBottomOffset;
     }
 
     function syncPosition() {
@@ -84,25 +106,29 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        var footer = document.querySelector('footer.site-footer, footer, #colophon');
-        if (!footer) return;
+        var article = getArticleElement();
+
+        if (!article) {
+            toc.style.transform = '';
+            return;
+        }
 
         toc.style.transform = '';
 
         var scrollTop = window.scrollY || window.pageYOffset;
 
-        var footerTop = footer.getBoundingClientRect().top + scrollTop;
+        var articleRect = article.getBoundingClientRect();
+        var articleBottom = articleRect.top + scrollTop + articleRect.height;
 
         var tocRect = toc.getBoundingClientRect();
         var tocTop = tocRect.top + scrollTop;
         var tocHeight = tocRect.height;
         var tocBottom = tocTop + tocHeight;
 
-        var offset = 130;
+        var offset = getTocBottomOffset();
 
-        var maxBottom = footerTop - offset;
-
-        var overflow = tocBottom - maxBottom;
+        var maxBottom = articleBottom - offset;
+        var overflow = Math.ceil(tocBottom - maxBottom);
 
         if (overflow > 0) {
             toc.style.transform = 'translateY(-' + overflow + 'px)';
@@ -125,10 +151,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function updateProgress() {
         if (!progressBar) return;
 
-        var article = document.querySelector(
-            '.single-post .post-content article, ' +
-            '.single-post .post-content, article.post, article'
-        );
+        var article = getArticleElement();
 
         if (!article) {
             progressBar.style.width = '0%';
@@ -144,7 +167,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function updateActiveHeading() {
         var headings = getHeadings();
-
         if (!headings.length) return;
 
         var currentId = headings[0].target.id;
