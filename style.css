@@ -5,7 +5,7 @@ Author: Zeitfresser
 Author URI: https://ztfr.eu/
 Theme URI: https://ztfr.eu/
 Description: Zeitfresser Wordpress Theme
-Version: 1.1
+Version: 1.2
 Tested up to: 6.2
 Requires PHP: 7.0
 License: GNU General Public License v2 or later
@@ -53,7 +53,7 @@ html{line-height:1.15;-webkit-text-size-adjust:100%}body{margin:0}main{display:b
   backdrop-filter:none !important;
   box-shadow:none !important;
 
-  overflow:hidden !important;
+  overflow:visible !important;
 
   transform:none;
   pointer-events:auto !important;
@@ -64,7 +64,7 @@ html{line-height:1.15;-webkit-text-size-adjust:100%}body{margin:0}main{display:b
   opacity: 0;
   transition: opacity 0.12s ease-out;
 
-  will-change: opacity, transform;
+  will-change: transform, opacity;
 }
 
 .zeitfresser-floating-toc.is-visible{

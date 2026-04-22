@@ -87,20 +87,25 @@ document.addEventListener('DOMContentLoaded', function () {
         var footer = document.querySelector('footer.site-footer, footer, #colophon');
         if (!footer) return;
 
-        var footerRect = footer.getBoundingClientRect();
+        toc.style.transform = '';
+
+        var scrollTop = window.scrollY || window.pageYOffset;
+
+        var footerTop = footer.getBoundingClientRect().top + scrollTop;
+
         var tocRect = toc.getBoundingClientRect();
+        var tocTop = tocRect.top + scrollTop;
+        var tocHeight = tocRect.height;
+        var tocBottom = tocTop + tocHeight;
 
-        var offset = 40;
-        var triggerOffset = Math.min(200, window.innerHeight * 0.2);
+        var offset = 130;
 
-        var overlap = tocRect.bottom - (footerRect.top - triggerOffset);
+        var maxBottom = footerTop - offset;
 
-        if (overlap > -offset) {
-            var strength = 0.85;
-            var correction = Math.max(0, (overlap + offset) * strength);
-            toc.style.transform = 'translateY(-' + correction + 'px)';
-        } else {
-            toc.style.transform = '';
+        var overflow = tocBottom - maxBottom;
+
+        if (overflow > 0) {
+            toc.style.transform = 'translateY(-' + overflow + 'px)';
         }
     }
 
