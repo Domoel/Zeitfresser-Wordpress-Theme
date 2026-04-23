@@ -177,12 +177,7 @@ The theme is designed to perform well out of the box, but benefits from a modern
 
 ## 🛠 Development & Support
 
-Zeitfresser is actively developed and designed to evolve.
-
-For support or contributions:
-
-- Join the <a href="https://ztfr.eu/matrix">Matrix Community</a>  
-- Use the <a href="https://look.ztfr.eu/#/#support:ztfr.eu">Support Channel</a>  
+If you need to get support or want to participate in the active development of this software, you can <a href="https://ztfr.eu/matrix">join our Zeitfresser Matrix Community</a> or the <a href="https://look.ztfr.eu/#/#support:ztfr.eu">Development & Support Channel</a> on Matrix.
 
 ## 📄 License
 
