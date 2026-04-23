@@ -7,7 +7,6 @@
   font-family: 'Oswald';
   src: url('../fonts/oswald-400.woff2') format('woff2');
   font-weight: 400;
-  font-stretch: 100%;
   font-style: normal;
   font-display: swap;
 }
@@ -16,7 +15,6 @@
   font-family: 'Oswald';
   src: url('../fonts/oswald-500.woff2') format('woff2');
   font-weight: 500;
-  font-stretch: 100%;
   font-style: normal;
   font-display: swap;
 }
@@ -25,17 +23,16 @@
   font-family: 'Oswald';
   src: url('../fonts/oswald-700.woff2') format('woff2');
   font-weight: 700;
-  font-stretch: 100%;
   font-style: normal;
   font-display: swap;
 }
+
 
 /* ROBOTO */
 @font-face {
   font-family: 'Roboto';
   src: url('../fonts/roboto-400.woff2') format('woff2');
   font-weight: 400;
-  font-stretch: 100%;
   font-style: normal;
   font-display: swap;
 }
@@ -44,7 +41,6 @@
   font-family: 'Roboto';
   src: url('../fonts/roboto-500.woff2') format('woff2');
   font-weight: 500;
-  font-stretch: 100%;
   font-style: normal;
   font-display: swap;
 }
@@ -53,19 +49,18 @@
   font-family: 'Roboto';
   src: url('../fonts/roboto-700.woff2') format('woff2');
   font-weight: 700;
-  font-stretch: 100%;
   font-style: normal;
   font-display: swap;
 }
 
 
 /* =========================
-   Typography System (Static)
+   Typography System
    ========================= */
 
 :root {
   --primary-font: 'Oswald', var(--zeitfresser-heading-fallback);
-  --secondary-font: 'Roboto', sans-serif;
+  --secondary-font: 'Roboto', var(--zeitfresser-body-fallback);
 
   --site-identity-font-size: 40px;
 
@@ -78,16 +73,7 @@
    Base Typography
    ========================= */
 
-body,
-p,
-div,
-span,
-article,
-section,
-li,
-input,
-textarea,
-button {
+body {
   font-family: var(--secondary-font);
   font-weight: var(--font-weight);
   line-height: var(--line-height);
@@ -95,7 +81,7 @@ button {
 
 
 /* =========================
-   Headlines (Hierarchy Fix)
+   Headlines
    ========================= */
 
 h1, h2, h3, h4, h5, h6,
@@ -107,7 +93,7 @@ h1, h2, h3, h4, h5, h6,
 
 
 /* =========================
-   Site Title (Branding)
+   Site Title
    ========================= */
 
 .site-title,
@@ -120,11 +106,16 @@ h1, h2, h3, h4, h5, h6,
 
 
 /* =========================
-   Secondary Text
+   Content Typography
    ========================= */
 
 .site-description,
 .entry-content,
-.news-snippet .excerpt {
+.post-content,
+.inner-article-content {
   font-family: var(--secondary-font);
+}
+
+html {
+  font-synthesis: none;
 }
