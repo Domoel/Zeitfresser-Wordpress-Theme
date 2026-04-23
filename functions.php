@@ -200,19 +200,6 @@ function zeitfresser_enqueue_static_colors() {
     );
 }
 add_action( 'wp_enqueue_scripts', 'zeitfresser_enqueue_static_colors', 20 );
- 
- /**
- * Load Google Fonts (required for static font setup)
- */
-function zeitfresser_enqueue_google_fonts() {
-    wp_enqueue_style(
-        'zeitfresser-google-fonts',
-        'https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap',
-        array(),
-        null
-    );
-}
-add_action('wp_enqueue_scripts', 'zeitfresser_enqueue_google_fonts');
 
 function zeitfresser_enqueue_static_fonts() {
     wp_enqueue_style(
@@ -281,18 +268,20 @@ function zeitfresser_cleanup_wp_head() {
 add_action( 'init', 'zeitfresser_cleanup_wp_head' );
 
 /**
- * Ensure Google Fonts domains are allowed and preconnected
+ * Preload local fonts for better performance
  */
-add_filter('wp_resource_hints', function($urls, $relation_type) {
-    if ($relation_type === 'preconnect') {
-        $urls[] = 'https://fonts.googleapis.com';
-        $urls[] = array(
-            'href' => 'https://fonts.gstatic.com',
-            'crossorigin' => 'anonymous',
-        );
-    }
-    return $urls;
-}, 10, 2);
+function zeitfresser_preload_fonts() {
+    ?>
+    <link rel="preload" href="<?php echo get_template_directory_uri(); ?>/fonts/oswald-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="<?php echo get_template_directory_uri(); ?>/fonts/oswald-500.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="<?php echo get_template_directory_uri(); ?>/fonts/oswald-700.woff2" as="font" type="font/woff2" crossorigin>
+
+    <link rel="preload" href="<?php echo get_template_directory_uri(); ?>/fonts/roboto-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="<?php echo get_template_directory_uri(); ?>/fonts/roboto-500.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="<?php echo get_template_directory_uri(); ?>/fonts/roboto-700.woff2" as="font" type="font/woff2" crossorigin>
+    <?php
+}
+add_action('wp_head', 'zeitfresser_preload_fonts', 1);
 
 /**
  * Remove front-end dashicons for visitors.
