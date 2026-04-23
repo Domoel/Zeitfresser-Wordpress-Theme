@@ -1,0 +1,12 @@
+:root {
+  --site-title-color: #f7f7fa;
+  --primary-color: #f7f7fa;
+  --secondary-color: #f7f7fa;
+  --light-color: #1e1f29;
+  --grey-color: #f7f7fa;
+  --dark-color: #f7f7fa;
+}
+
+body {
+  background-color: #1e1f29;
+}

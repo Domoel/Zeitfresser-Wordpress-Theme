@@ -1,0 +1,35 @@
+/* =========================
+   Typography System (Static)
+   ========================= */
+
+:root {
+  --primary-font: 'Oswald', sans-serif;
+  --secondary-font: 'Roboto', sans-serif;
+
+  --site-identity-font-size: 40px;
+  --font-weight: 400;
+  --line-height: 1.6;
+}
+
+/* Base */
+body {
+  font-family: var(--secondary-font);
+  font-weight: var(--font-weight);
+  line-height: var(--line-height);
+}
+
+/* Headlines */
+h1, h2, h3, h4, h5, h6,
+.entry-title {
+  font-family: var(--primary-font);
+  font-weight: var(--font-weight);
+}
+
+/* Site Title */
+.site-title,
+.site-title a {
+  font-family: var(--primary-font);
+  font-size: var(--site-identity-font-size);
+  font-weight: var(--font-weight);
+  line-height: 1.2;
+}

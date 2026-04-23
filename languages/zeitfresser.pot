@@ -2,8 +2,8 @@
 # This file is distributed under the GNU General Public License v2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Daisy Blog 1.0.0\n"
-"Report-Msgid-Bugs-To: https://wordpress.org/support/theme/daisy-blog\n"
+"Project-Id-Version: Zeitfresser Theme"
+"Report-Msgid-Bugs-To: https://github.com/Domoel/Zeitfresser-Wordpress-Theme"
 "POT-Creation-Date: 2023-04-10 14:33:31+00:00\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -847,7 +847,7 @@ msgid "Daisy Blog"
 msgstr ""
 
 #. Theme URI of the plugin/theme
-msgid "https://graphthemes.com/daisy-blog"
+msgid "https://github.com/Domoel/Zeitfresser-Wordpress-Theme"
 msgstr ""
 
 #. Description of the plugin/theme

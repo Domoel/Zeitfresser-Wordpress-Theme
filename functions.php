@@ -18,7 +18,6 @@ if ( ! defined( 'DAISY_BLOG_VERSION' ) ) {
 }
 
 require get_template_directory() . '/inc/zeitfresser-helpers.php';
-require get_template_directory() . '/inc/legacy-aliases.php';
 require get_template_directory() . '/inc/performance-tools.php';
 require get_template_directory() . '/inc/zeitfresser-toc.php';
 
@@ -43,16 +42,6 @@ function zeitfresser_setup() {
             'caption',
             'style',
             'script',
-        )
-    );
-    add_theme_support(
-        'custom-background',
-        apply_filters(
-            'zeitfresser_custom_background_args',
-            array(
-                'default-image' => '',
-                'default-color' => zeitfresser_get_default_background_color(),
-            )
         )
     );
     add_theme_support( 'customize-selective-refresh-widgets' );
@@ -151,7 +140,21 @@ function zeitfresser_scripts() {
         array(),
         zeitfresser_asset_version( '/style.css' )
     );
-    wp_style_add_data( 'zeitfresser', 'rtl', 'replace' );
+
+/**
+ * Load RTL stylesheet from /css folder
+ */
+function zeitfresser_rtl_styles() {
+    if ( is_rtl() ) {
+        wp_enqueue_style(
+            'zeitfresser-rtl',
+            get_template_directory_uri() . '/css/style-rtl.css',
+            array('zeitfresser'),
+            filemtime(get_template_directory() . '/css/style-rtl.css')
+        );
+    }
+}
+add_action('wp_enqueue_scripts', 'zeitfresser_rtl_styles', 11);
 
     wp_enqueue_script(
         'zeitfresser-navigation',
@@ -183,7 +186,45 @@ function zeitfresser_scripts() {
         wp_enqueue_script( 'comment-reply' );
     }
 }
-add_action( 'wp_enqueue_scripts', 'zeitfresser_scripts' );
+
+function zeitfresser_enqueue_static_colors() {
+    wp_enqueue_style(
+        'zeitfresser-colors',
+        get_template_directory_uri() . '/css/colors.css',
+        array('zeitfresser'),
+        file_exists(get_template_directory() . '/css/colors.css')
+            ? filemtime(get_template_directory() . '/css/colors.css')
+            : ZEITFRESSER_VERSION
+    );
+}
+add_action( 'wp_enqueue_scripts', 'zeitfresser_enqueue_static_colors', 20 );
+
+add_action( 'wp_enqueue_scripts', 'zeitfresser_scripts', 10 );
+ 
+ /**
+ * Load Google Fonts (required for static font setup)
+ */
+function zeitfresser_enqueue_google_fonts() {
+    wp_enqueue_style(
+        'zeitfresser-google-fonts',
+        'https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap',
+        array(),
+        null
+    );
+}
+add_action('wp_enqueue_scripts', 'zeitfresser_enqueue_google_fonts');
+
+function zeitfresser_enqueue_static_fonts() {
+    wp_enqueue_style(
+        'zeitfresser-fonts',
+        get_template_directory_uri() . '/css/fonts.css',
+        array(),
+        file_exists(get_template_directory() . '/css/fonts.css')
+            ? filemtime(get_template_directory() . '/css/fonts.css')
+            : ZEITFRESSER_VERSION
+    );
+}
+add_action( 'wp_enqueue_scripts', 'zeitfresser_enqueue_static_fonts', 15 );
 
 /**
  * Theme package marker kept for compatibility with the original premium controls.
@@ -194,7 +235,6 @@ function zeitfresser_free_pro() {
     return 'pro';
 }
 
-require get_template_directory() . '/inc/custom-header.php';
 require get_template_directory() . '/inc/template-tags.php';
 require get_template_directory() . '/inc/template-functions.php';
 require get_template_directory() . '/inc/customizer.php';
@@ -204,21 +244,7 @@ if ( defined( 'JETPACK__VERSION' ) ) {
 }
 
 require get_template_directory() . '/inc/blocks/blocks.php';
-require get_template_directory() . '/inc/graphthemes-widgets/graphthemes-widgets.php';
 require get_template_directory() . '/inc/pagination.php';
-
-
-/**
- * Remove duplicate local Google font generation to avoid unnecessary footer CSS.
- *
- * @return void
- */
-function zeitfresser_disable_duplicate_local_fonts() {
-    remove_action( 'wp_loaded', 'zeitfresser_google_font_local' );
-}
-add_action( 'after_setup_theme', 'zeitfresser_disable_duplicate_local_fonts', 20 );
-
-
 
 /**
  * Add safe front-end performance optimizations.
@@ -255,6 +281,20 @@ function zeitfresser_cleanup_wp_head() {
 add_action( 'init', 'zeitfresser_cleanup_wp_head' );
 
 /**
+ * Ensure Google Fonts domains are allowed and preconnected
+ */
+add_filter('wp_resource_hints', function($urls, $relation_type) {
+    if ($relation_type === 'preconnect') {
+        $urls[] = 'https://fonts.googleapis.com';
+        $urls[] = array(
+            'href' => 'https://fonts.gstatic.com',
+            'crossorigin' => 'anonymous',
+        );
+    }
+    return $urls;
+}, 10, 2);
+
+/**
  * Remove front-end dashicons for visitors.
  *
  * @return void
@@ -265,58 +305,6 @@ function zeitfresser_maybe_dequeue_dashicons() {
     }
 }
 add_action( 'wp_enqueue_scripts', 'zeitfresser_maybe_dequeue_dashicons', 100 );
-
-/**
- * Add resource hints for externally loaded fonts only when needed.
- *
- * @param array  $urls          URLs to print for resource hints.
- * @param string $relation_type Hint relation type.
- * @return array
- */
-function zeitfresser_resource_hints( $urls, $relation_type ) {
-    $uses_external_fonts = false;
-
-    if ( function_exists( 'zeitfresser_fonts_url' ) ) {
-        $uses_external_fonts = ! empty( zeitfresser_fonts_url( zeitfresser_used_google_fonts() ) ) && empty( zeitfresser_get_local_webfonts_css() );
-    }
-
-    if ( $uses_external_fonts && 'preconnect' === $relation_type ) {
-        $urls[] = 'https://fonts.googleapis.com';
-        $urls[] = array(
-            'href'        => 'https://fonts.gstatic.com',
-            'crossorigin' => 'anonymous',
-        );
-    }
-
-    return $urls;
-}
-add_filter( 'wp_resource_hints', 'zeitfresser_resource_hints', 10, 2 );
-
-/**
- * Preload locally hosted webfont files once they are available.
- *
- * @return void
- */
-function zeitfresser_preload_local_webfonts() {
-    if ( is_admin() || ! function_exists( 'zeitfresser_get_local_webfonts_css' ) ) {
-        return;
-    }
-
-    $urls = zeitfresser_get_local_webfont_urls( zeitfresser_get_local_webfonts_css() );
-
-    if ( empty( $urls ) ) {
-        return;
-    }
-
-    $urls = array_slice( $urls, 0, 4 );
-
-    foreach ( $urls as $url ) {
-        $type = ( '.woff2' === substr( $url, -6 ) ) ? 'font/woff2' : 'font/woff';
-        printf( "<link rel='preload' href='%s' as='font' type='%s' crossorigin>
-", esc_url( $url ), esc_attr( $type ) );
-    }
-}
-add_action( 'wp_head', 'zeitfresser_preload_local_webfonts', 2 );
 
 /**
  * Improve image decoding defaults without changing visual output.
