@@ -198,6 +198,4 @@ Zeitfresser is built for developers and writers who value:
 - readability  
 - clean engineering  
 
-It avoids unnecessary complexity and focuses on doing a few things exceptionally well:
-
-**presenting content clearly, loading fast, and staying maintainable.**
+It avoids unnecessary complexity and focuses on doing a few things exceptionally well: **presenting content clearly, loading fast, and staying maintainable.**
