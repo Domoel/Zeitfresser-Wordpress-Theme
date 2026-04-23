@@ -49,7 +49,7 @@ Performance is a core design principle.
 
 Assets are loaded only when needed, avoiding common bottlenecks such as render-blocking scripts or excessive CSS overhead.
 
-## Key Benefits
+### Key Benefits
 
 - No inline styles or dynamically injected CSS  
 - No dependency on the WordPress Customizer for color rendering  
@@ -57,7 +57,7 @@ Assets are loaded only when needed, avoiding common bottlenecks such as render-b
 - Easy to maintain and extend  
 - Fully compatible with modern browsers and rendering pipelines  
 
-## Design Approach
+### Design Approach
 
 The theme follows a dark-first design with carefully selected contrast values:
 
