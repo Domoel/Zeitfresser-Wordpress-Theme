@@ -28,156 +28,111 @@ A performance-optimized, minimalist dark blog theme for WordPress, built for fas
 <br>
 <img width="1800" height="1271" alt="preview" src="https://github.com/user-attachments/assets/aefff842-8189-48ae-965c-77799667b2a9" />
 
+
 ## ✨ Overview
 
 Zeitfresser is a custom-built WordPress theme designed with a clear focus:  
 **fast, readable, and distraction-free technical blogging**.
 
-Originally based on the popular [Daisy Blog](https://wordpress.org/themes/daisy-blog/) theme, Zeitfresser has evolved into a fully independent and heavily optimized codebase. Every part of the system has been refactored with performance, clarity, and maintainability in mind.
+Originally based on the popular [Daisy Blog](https://wordpress.org/themes/daisy-blog/) theme, Zeitfresser has evolved into a fully independent and heavily optimized codebase. Over time, every layer of the theme has been reworked with performance, clarity, and maintainability in mind.
 
-The design follows a minimalist dark aesthetic inspired by Dracula, with a strong emphasis on typography, structure, and reading flow.
+The visual identity follows a minimalist dark aesthetic inspired by Dracula, where typography, spacing, and structure take priority over decoration. The result is a calm, highly readable environment tailored for long-form technical content.
 
 ## 🚀 Performance & Architecture
 
-Performance is a core design principle.
+Performance is not an afterthought in Zeitfresser — it is the foundation of the entire system.
 
-- No unnecessary dependencies or heavy libraries  
-- Minimal JavaScript footprint  
-- Deferred and optimized script loading  
-- Lean CSS architecture with reduced redundancy  
-- Clean DOM structure for predictable rendering  
+Instead of relying on heavy abstractions or third-party dependencies, the theme focuses on a lean architecture with minimal JavaScript, carefully structured CSS, and predictable rendering behavior. Assets are only loaded when needed, avoiding unnecessary overhead and reducing the risk of render-blocking resources.
 
-Assets are loaded only when needed, avoiding common bottlenecks such as render-blocking scripts or excessive CSS overhead.
+The DOM structure remains intentionally simple, which helps ensure consistent rendering across browsers and improves maintainability over time.
 
-### Key Benefits
+## 🖼️ Image Optimization System (v1.7)
 
-- No inline styles or dynamically injected CSS  
-- No dependency on the WordPress Customizer for color rendering  
-- Consistent color usage across all components  
-- Easy to maintain and extend  
-- Fully compatible with modern browsers and rendering pipelines  
+With version **1.7**, Zeitfresser introduces a fully integrated **image optimization pipeline**.
 
-### Design Approach
+Uploaded images can now be automatically converted to modern formats such as **AVIF** or **WebP**, depending on server capabilities. This significantly reduces file sizes while preserving visual quality, leading to faster page loads and improved Core Web Vitals.
 
-The theme follows a dark-first design with carefully selected contrast values:
+The system is designed to be both flexible and safe:
 
-- Background and surface colors are optimized for readability  
-- Accent colors are used sparingly to guide attention  
-- Typography and spacing work together with color to create hierarchy  
+- Optimization can run automatically on upload or manually via the dashboard  
+- Original file paths are preserved before any transformation  
+- Cleanup of original files is optional and only performed when safe  
+- All operations are versioned and idempotent  
 
-This approach ensures a clean, stable, and performant visual system without unnecessary complexity.
+A dedicated **Performance Tools dashboard** allows you to process existing media libraries in batches, monitor progress in real time, and optionally remove original files after successful optimization.
+
+For full control, automation can be configured via the WordPress Customizer. You can choose between manual processing, automatic optimization, or a fully automated workflow that includes cleanup of original images.
 
 ## 🔤 Local Fonts & Typography System
 
-Zeitfresser uses a fully self-hosted font system:
+Zeitfresser uses a fully self-hosted typography system built around Oswald and Roboto.
 
-- **Oswald** (400, 500, 700) for headings  
-- **Roboto** (400, 500, 700) for body text  
+All fonts are served locally using optimized `.woff2` files, eliminating external requests and improving privacy and performance. Critical font assets are preloaded to ensure fast rendering, and the entire system is built using CSS variables for consistency and maintainability.
 
-Key improvements:
-
-- No external font requests (Google Fonts removed)  
-- Fonts served locally via optimized `.woff2` files  
-- Critical font assets are **preloaded** for faster rendering  
-- Consistent typography across all environments  
-- Full control over font loading and rendering behavior  
-
-The typography system is based on CSS variables and designed to be predictable, maintainable, and visually consistent.
+The result is a predictable and visually stable typography layer across all environments.
 
 ## 🎨 CSS-Based Color System
 
-Zeitfresser uses a fully static, CSS variable-driven color system.
+The theme relies entirely on a static, CSS variable-driven color system.
 
-All colors are defined using native CSS custom properties (`:root`) and applied consistently across the entire theme. This replaces traditional PHP-driven or dynamically generated styles with a simpler and more predictable approach.
+Instead of dynamically generated styles or PHP-driven color logic, all values are defined using native CSS custom properties. This approach simplifies the styling layer, improves performance, and ensures consistent rendering without runtime overhead.
 
 ## ⚡ Core Web Vitals
 
-The theme is optimized for real-world performance:
+Zeitfresser is optimized for real-world performance.
 
-- Stable layout with no unexpected shifts (CLS-safe)  
-- Optimized Largest Contentful Paint (LCP)  
-- Reduced render-blocking resources  
-- Early font availability through preload strategy  
-
-Even long-form articles render quickly and consistently.
+Layouts are stable and free of unexpected shifts, ensuring a solid CLS score. Critical assets are loaded early, and render-blocking resources are minimized. Even long-form articles with complex structures remain responsive and fast.
 
 ## 📑 Floating Table of Contents
 
-A core feature of the theme is its editorial-style floating Table of Contents.
+A key editorial feature of the theme is the floating Table of Contents.
 
-- Automatically generated from headings  
-- Positioned outside the main content flow  
-- Highlights the active section  
-- Includes a subtle progress indicator  
-- Smooth scroll behavior  
-
-Designed to enhance navigation without adding visual noise.
+It is generated automatically from headings and positioned outside the main content flow, allowing readers to navigate long articles without distraction. The active section is highlighted, and a subtle progress indicator provides orientation within the document.
 
 ## ⚙️ Customization
 
-The theme integrates cleanly with the WordPress Customizer.
+Zeitfresser integrates cleanly with the WordPress Customizer, offering a small but focused set of options.
 
-- Enable/disable TOC globally  
-- Configure heading thresholds for TOC visibility  
-- Adjust layout behavior without adding complexity  
-
-All options are intentionally minimal and focused.
+Instead of overwhelming users with configuration, the theme provides only what is necessary to adapt behavior without introducing complexity. This includes layout-related options and performance settings such as the image optimization pipeline.
 
 ## 🎨 Design Philosophy
 
-Zeitfresser follows a strict philosophy:  
+The guiding principle behind Zeitfresser is simple:  
 **clarity over decoration**.
 
-- Minimal dark UI with subtle accent colors  
-- Typography-driven hierarchy  
-- Clean spacing instead of visual clutter  
-- Focus on long-form readability  
-
-The result is a calm, distraction-free reading experience.
+Every design decision is made to support readability and structure. Colors are used sparingly, spacing is intentional, and typography defines hierarchy. The goal is not to impress visually, but to support sustained reading without fatigue.
 
 ## 🧹 Code Quality
 
-The codebase has been systematically refactored:
+The codebase has been systematically refactored to remove legacy patterns and reduce complexity.
 
-- Legacy components removed  
-- CSS conflicts minimized  
-- Modular structure  
-- No unnecessary abstractions  
-- No technical debt patterns  
-
-The theme is designed for long-term maintainability.
+The theme avoids unnecessary abstractions and focuses on a modular, predictable structure. This makes it easier to maintain, extend, and reason about over time, without accumulating technical debt.
 
 ## 📱 Responsiveness
 
-The layout adapts cleanly across devices.
+Zeitfresser adapts naturally across devices.
 
-- Desktop: full editorial experience  
-- Mobile: simplified, focused layout  
-- Feature-aware behavior (e.g. TOC disabled when not useful)  
-
-All core functionality remains accessible.
+On desktop, it provides a full editorial experience with structured navigation. On mobile, the layout simplifies while preserving readability and access to core features. Components such as the Table of Contents adjust dynamically based on context.
 
 ## 📦 Installation
 
 To install the theme:
 
 1. Download or clone the repository  
-2. Upload it to your WordPress installation: `/wp-content/themes/`
+2. Upload it to your WordPress installation: `/wp-content/themes/`  
 3. Activate it via: **Appearance → Themes**
 
 ## ⚡ Recommended Setup
 
-For best performance:
+While the theme performs well out of the box, it benefits from a modern setup.
 
-- Enable caching (server or plugin)  
-- Use a CDN for global delivery  
-- Optimize existing media assets  
-
-The theme is designed to perform well out of the box, but benefits from a modern hosting setup.
+Using caching, a CDN, and optimized hosting will further improve performance, especially for larger sites with extensive media libraries.
 
 ## 🛠 Development & Support
 
-If you need to get support or want to participate in the active development of this software, you can <a href="https://ztfr.eu/matrix">join our Zeitfresser Matrix Community</a> or the <a href="https://look.ztfr.eu/#/#support:ztfr.eu">Development & Support Channel</a> on Matrix.
+If you want to get support or participate in development, you can join the  
+<a href="https://ztfr.eu/matrix">Zeitfresser Matrix Community</a> or the  
+<a href="https://look.ztfr.eu/#/#support:ztfr.eu">Development & Support Channel</a>.
 
 ## 📄 License
 
@@ -187,10 +142,9 @@ Originally based on the [Daisy Blog](https://wordpress.org/themes/daisy-blog/) t
 
 ## 💬 Final Note
 
-Zeitfresser is built for developers and writers who value:
+Zeitfresser is built for developers and writers who care about:
 
-- performance  
-- readability  
-- clean engineering  
+performance, readability, and clean engineering.
 
-It avoids unnecessary complexity and focuses on doing a few things exceptionally well: **presenting content clearly, loading fast, and staying maintainable.**
+It avoids unnecessary complexity and focuses on doing a few things exceptionally well:  
+**presenting content clearly, loading fast, and remaining maintainable over time.**
