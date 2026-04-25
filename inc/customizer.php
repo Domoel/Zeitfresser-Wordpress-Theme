@@ -84,7 +84,7 @@ function zeitfresser_customize_register( $wp_customize ) {
 			'type'        => 'checkbox',
 			'section'     => 'ztfr_performance_tools',
 			'label'       => 'Auto Delete Original Pictures on Upload',
-			'description' => 'Automatically deletes original images after optimization. Warning: deleting original images cannot be undone.',
+			'description' => 'Automatically deletes original images after optimization. ⚠️ This action cannot be undone.',
 		)
 	);
 }
