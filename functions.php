@@ -4,7 +4,7 @@
  *
  * @package zeitfresser
  */
-
+ 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
@@ -17,9 +17,67 @@ if ( ! defined( 'DAISY_BLOG_VERSION' ) ) {
     define( 'DAISY_BLOG_VERSION', ZEITFRESSER_VERSION );
 }
 
+if ( ! defined( 'ZEITFRESSER_IMAGE_OPTIMIZATION_VERSION' ) ) {
+    define( 'ZEITFRESSER_IMAGE_OPTIMIZATION_VERSION', '1.0' );
+}
+
 require get_template_directory() . '/inc/zeitfresser-helpers.php';
 require get_template_directory() . '/inc/performance-tools.php';
 require get_template_directory() . '/inc/zeitfresser-toc.php';
+
+/**
+ * Upload Handler
+ */
+add_filter('wp_handle_upload', 'zeitfresser_capture_original_upload', 10, 2);
+
+/**
+ * Capture original upload path safely
+ */
+function zeitfresser_capture_original_upload( $upload, $context ) {
+
+    if ( empty( $upload['file'] ) ) {
+        return $upload;
+    }
+
+    // Store temporarily (request-scoped)
+    $GLOBALS['zeitfresser_last_uploaded_file'] = $upload['file'];
+
+    return $upload;
+}
+add_filter( 'wp_handle_upload', 'zeitfresser_capture_original_upload', 10, 2 );
+
+/**
+ * Persist original file path to attachment meta
+ */
+function zeitfresser_store_original_file( $attachment_id ) {
+
+    if ( ! wp_attachment_is_image( $attachment_id ) ) {
+        return;
+    }
+
+    if ( empty( $GLOBALS['zeitfresser_last_uploaded_file'] ) ) {
+        return;
+    }
+
+    $file = $GLOBALS['zeitfresser_last_uploaded_file'];
+
+    // Safety: ensure file still exists
+    if ( ! file_exists( $file ) ) {
+        return;
+    }
+
+    // Prevent overwrite if already set
+    if ( get_post_meta( $attachment_id, '_zeitfresser_original_file', true ) ) {
+        return;
+    }
+
+    update_post_meta(
+        $attachment_id,
+        '_zeitfresser_original_file',
+        $file
+    );
+}
+add_action( 'add_attachment', 'zeitfresser_store_original_file' );
 
 /**
  * Theme setup.
@@ -67,6 +125,19 @@ function zeitfresser_setup() {
     add_editor_style( 'editor-style.css' );
 }
 add_action( 'after_setup_theme', 'zeitfresser_setup' );
+
+/**
+ * Register optimized image sizes
+ */
+function zeitfresser_custom_image_sizes() {
+
+    // Content images (main article)
+    add_image_size( 'zeitfresser-content', 720, 0, false );
+
+    // Archive / card layout
+    add_image_size( 'zeitfresser-card', 480, 0, false );
+}
+add_action( 'after_setup_theme', 'zeitfresser_custom_image_sizes' );
 
 /**
  * Set the content width in pixels.
@@ -268,20 +339,33 @@ function zeitfresser_cleanup_wp_head() {
 add_action( 'init', 'zeitfresser_cleanup_wp_head' );
 
 /**
- * Preload local fonts for better performance
+ * Preload critical local fonts only
  */
 function zeitfresser_preload_fonts() {
     ?>
+    <!-- Critical Fonts Only -->
     <link rel="preload" href="<?php echo get_template_directory_uri(); ?>/fonts/oswald-400.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="<?php echo get_template_directory_uri(); ?>/fonts/oswald-500.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="<?php echo get_template_directory_uri(); ?>/fonts/oswald-700.woff2" as="font" type="font/woff2" crossorigin>
-
     <link rel="preload" href="<?php echo get_template_directory_uri(); ?>/fonts/roboto-400.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="<?php echo get_template_directory_uri(); ?>/fonts/roboto-500.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="<?php echo get_template_directory_uri(); ?>/fonts/roboto-700.woff2" as="font" type="font/woff2" crossorigin>
     <?php
 }
 add_action('wp_head', 'zeitfresser_preload_fonts', 1);
+
+/**
+ * Optimize font loading with preconnect
+ */
+add_filter( 'wp_resource_hints', function( $urls, $relation_type ) {
+
+    if ( 'preconnect' === $relation_type ) {
+        $urls[] = [
+            'href'        => get_template_directory_uri(),
+            'crossorigin' => 'anonymous',
+        ];
+    }
+
+    return $urls;
+
+}, 10, 2 );
 
 /**
  * Remove front-end dashicons for visitors.
@@ -317,13 +401,18 @@ function zeitfresser_optimize_image_attributes( $attr, $attachment, $size ) {
 add_filter( 'wp_get_attachment_image_attributes', 'zeitfresser_optimize_image_attributes', 10, 3 );
 
 /**
- * Lower the threshold for WordPress scaled originals.
+ * Lower the threshold for WordPress scaled originals when auto optimization is enabled.
  *
- * This prevents very large uploads from shipping oversized source images.
+ * When automatic optimization is disabled, original uploads should remain untouched.
  *
- * @return int
+ * @return int|false
  */
 function zeitfresser_big_image_size_threshold() {
+
+    if ( ! get_theme_mod( 'ztfr_auto_optimize', true ) ) {
+        return false;
+    }
+
     return 1800;
 }
 add_filter( 'big_image_size_threshold', 'zeitfresser_big_image_size_threshold' );
@@ -335,27 +424,183 @@ add_filter( 'big_image_size_threshold', 'zeitfresser_big_image_size_threshold' )
  * @return array
  */
 function zeitfresser_filter_intermediate_image_sizes( $sizes ) {
-    unset( $sizes['1536x1536'], $sizes['2048x2048'] );
+
+    // Remove oversized defaults
+    unset(
+        $sizes['1536x1536'],
+        $sizes['2048x2048']
+    );
 
     return $sizes;
 }
 add_filter( 'intermediate_image_sizes_advanced', 'zeitfresser_filter_intermediate_image_sizes' );
 
 /**
- * Convert generated JPEG and PNG sub-sizes to WebP when supported by the server.
+ * Convert generated JPEG and PNG files to AVIF/WebP when enabled.
+ *
+ * Auto optimization can be disabled for uploads via Customizer.
+ * Manual optimization may still force conversion through a request-scoped flag.
  *
  * @param array $formats Output format map.
  * @return array
  */
 function zeitfresser_image_output_format( $formats ) {
-    if ( function_exists( 'wp_image_editor_supports' ) && wp_image_editor_supports( array( 'mime_type' => 'image/webp' ) ) ) {
-        $formats['image/jpeg'] = 'image/webp';
-        $formats['image/png']  = 'image/webp';
+
+    $auto_enabled  = get_theme_mod( 'ztfr_auto_optimize', true );
+    $force_enabled = ! empty( $GLOBALS['zeitfresser_force_image_optimization'] );
+
+    if ( ! $auto_enabled && ! $force_enabled ) {
+        return $formats;
+    }
+
+    if ( function_exists( 'wp_image_editor_supports' ) ) {
+
+        // Prefer AVIF if supported.
+        if ( wp_image_editor_supports( array( 'mime_type' => 'image/avif' ) ) ) {
+            $formats['image/jpeg'] = 'image/avif';
+            $formats['image/png']  = 'image/avif';
+
+        // Fallback to WebP.
+        } elseif ( wp_image_editor_supports( array( 'mime_type' => 'image/webp' ) ) ) {
+            $formats['image/jpeg'] = 'image/webp';
+            $formats['image/png']  = 'image/webp';
+        }
     }
 
     return $formats;
 }
 add_filter( 'image_editor_output_format', 'zeitfresser_image_output_format' );
+
+/**
+ * Mark images as optimized only when optimization is actually active.
+ *
+ * @param array $metadata Attachment metadata.
+ * @param int   $attachment_id Attachment ID.
+ * @return array
+ */
+function zeitfresser_mark_new_images_optimized( $metadata, $attachment_id ) {
+
+    if ( ! wp_attachment_is_image( $attachment_id ) ) {
+        return $metadata;
+    }
+
+    $auto_enabled  = get_theme_mod( 'ztfr_auto_optimize', true );
+    $force_enabled = ! empty( $GLOBALS['zeitfresser_force_image_optimization'] );
+
+    if ( ! $auto_enabled && ! $force_enabled ) {
+        return $metadata;
+    }
+
+    update_post_meta(
+        $attachment_id,
+        '_zeitfresser_media_optimized_version',
+        ZEITFRESSER_IMAGE_OPTIMIZATION_VERSION
+    );
+
+    return $metadata;
+}
+add_filter( 'wp_generate_attachment_metadata', 'zeitfresser_mark_new_images_optimized', 20, 2 );
+
+/**
+ * Auto Optimize Hook
+ */
+add_filter(
+    'wp_generate_attachment_metadata',
+    'zeitfresser_auto_optimize_on_upload',
+    15,
+    2
+);
+
+function zeitfresser_auto_optimize_on_upload( $metadata, $attachment_id ) {
+
+    // 🔒 only images
+    if ( ! wp_attachment_is_image( $attachment_id ) ) {
+        return $metadata;
+    }
+
+    // 🔒 feature toggle
+    if ( ! get_theme_mod( 'ztfr_auto_optimize', true ) ) {
+        return $metadata;
+    }
+
+    $file = get_attached_file( $attachment_id );
+
+    if ( ! $file || ! file_exists( $file ) ) {
+        return $metadata;
+    }
+
+    // 🔥 DO NOT overwrite upload-captured original
+    if ( ! get_post_meta( $attachment_id, '_zeitfresser_original_file', true ) ) {
+
+        // fallback only
+        update_post_meta( $attachment_id, '_zeitfresser_original_file', $file );
+    }
+
+    // mark as optimized
+    update_post_meta(
+        $attachment_id,
+        '_zeitfresser_media_optimized_version',
+        ZEITFRESSER_IMAGE_OPTIMIZATION_VERSION
+    );
+
+    return $metadata;
+}
+
+/**
+ * Auto Delete Hook
+ */
+add_filter(
+    'wp_generate_attachment_metadata',
+    'zeitfresser_auto_delete_original_after_upload',
+    30,
+    2
+);
+
+function zeitfresser_auto_delete_original_after_upload( $metadata, $attachment_id ) {
+
+    // 🔒 only images
+    if ( ! wp_attachment_is_image( $attachment_id ) ) {
+        return $metadata;
+    }
+
+    // 🔒 feature toggles
+    if ( ! get_theme_mod( 'ztfr_auto_optimize', true ) ) {
+        return $metadata;
+    }
+
+    if ( ! get_theme_mod( 'ztfr_auto_delete', false ) ) {
+        return $metadata;
+    }
+
+    $original = get_post_meta(
+        $attachment_id,
+        '_zeitfresser_original_file',
+        true
+    );
+
+    if ( ! $original || ! file_exists( $original ) ) {
+        return $metadata;
+    }
+
+    // skip modern formats
+    $ext = strtolower( pathinfo( $original, PATHINFO_EXTENSION ) );
+
+    if ( in_array( $ext, [ 'webp', 'avif' ], true ) ) {
+        update_post_meta( $attachment_id, '_zeitfresser_original_deleted', 1 );
+        return $metadata;
+    }
+
+    if ( ! is_writable( $original ) ) {
+        return $metadata;
+    }
+
+    // 🔥 delete original
+    if ( unlink( $original ) ) {
+        update_post_meta( $attachment_id, '_zeitfresser_original_deleted', 1 );
+    }
+
+    return $metadata;
+}
 
 /**
  * Keep generated image quality balanced for file size and visual fidelity.
@@ -365,11 +610,18 @@ add_filter( 'image_editor_output_format', 'zeitfresser_image_output_format' );
  * @return int
  */
 function zeitfresser_image_quality( $quality, $mime_type = 'image/jpeg' ) {
-    if ( 'image/png' === $mime_type ) {
-        return $quality;
-    }
 
-    return 82;
+    switch ( $mime_type ) {
+        case 'image/avif':
+            return 50;
+
+        case 'image/webp':
+            return 75;
+
+        case 'image/jpeg':
+        default:
+            return 82;
+    }
 }
 add_filter( 'wp_editor_set_quality', 'zeitfresser_image_quality', 10, 2 );
 
@@ -399,7 +651,7 @@ function zeitfresser_improve_attachment_dimensions( $attr, $attachment, $size ) 
     if ( empty( $attr['fetchpriority'] ) && ! is_admin() && ! is_feed() ) {
         static $did_set_high_priority = false;
 
-        if ( ! $did_set_high_priority && ( is_home() || is_front_page() || is_archive() || is_search() || is_singular() ) ) {
+        if ( ! $did_set_high_priority && is_singular() ) {
             $attr['fetchpriority'] = 'high';
             $did_set_high_priority = true;
         }
@@ -409,6 +661,62 @@ function zeitfresser_improve_attachment_dimensions( $attr, $attachment, $size ) 
 }
 add_filter( 'wp_get_attachment_image_attributes', 'zeitfresser_improve_attachment_dimensions', 11, 3 );
 
+/**
+ * Improve responsive image sizes attribute.
+ *
+ * @param string $sizes Existing sizes attribute.
+ * @param array  $size  Requested image size.
+ * @return string
+ */
+function zeitfresser_responsive_image_sizes( $sizes, $size ) {
+
+    // Single post content
+    if ( is_singular() ) {
+        return '(max-width: 768px) 100vw, (max-width: 1200px) 720px, 720px';
+    }
+
+    // Archive / blog overview
+    if ( is_home() || is_front_page() || is_archive() || is_search() ) {
+        return '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 400px';
+    }
+
+    return $sizes;
+}
+add_filter( 'wp_calculate_image_sizes', 'zeitfresser_responsive_image_sizes', 10, 2 );
+
+/**
+ * Determine the most likely LCP image URL.
+ *
+ * @return string
+ */
+function zeitfresser_get_lcp_image_url() {
+
+    // Single posts/pages → featured image
+    if ( is_singular() ) {
+        $post_id = get_queried_object_id();
+
+        if ( $post_id && has_post_thumbnail( $post_id ) ) {
+            return get_the_post_thumbnail_url( $post_id, 'large' );
+        }
+    }
+
+    // Archives / homepage → first post with thumbnail
+    if ( is_home() || is_front_page() || is_archive() || is_search() ) {
+
+        global $wp_query;
+
+        if ( ! empty( $wp_query->posts ) ) {
+
+            foreach ( $wp_query->posts as $post ) {
+                if ( has_post_thumbnail( $post->ID ) ) {
+                    return get_the_post_thumbnail_url( $post->ID, 'medium_large' );
+                }
+            }
+        }
+    }
+
+    return '';
+}
 
 /**
  * Preload the most likely LCP image for archive and singular views.
@@ -417,39 +725,35 @@ add_filter( 'wp_get_attachment_image_attributes', 'zeitfresser_improve_attachmen
  * @return array
  */
 function zeitfresser_preload_resources( $resources ) {
+
     if ( is_admin() || is_feed() || is_embed() ) {
         return $resources;
     }
 
-    $image_url  = '';
-    $image_type = '';
-
-    if ( is_singular() ) {
-        $object_id = get_queried_object_id();
-
-        if ( $object_id && has_post_thumbnail( $object_id ) ) {
-            $image_url = get_the_post_thumbnail_url( $object_id, 'large' );
-        }
-    } elseif ( is_home() || is_front_page() || is_archive() || is_search() ) {
-        global $wp_query;
-
-        if ( isset( $wp_query->posts[0]->ID ) && has_post_thumbnail( $wp_query->posts[0]->ID ) ) {
-            $image_url = get_the_post_thumbnail_url( $wp_query->posts[0]->ID, 'thumbnail' );
-        }
-    }
+    // 🔥 NEW: use smart detection
+    $image_url = zeitfresser_get_lcp_image_url();
 
     if ( empty( $image_url ) ) {
         return $resources;
     }
 
-    $extension = strtolower( pathinfo( wp_parse_url( $image_url, PHP_URL_PATH ), PATHINFO_EXTENSION ) );
+    // Robust extension detection
+    $extension = strtolower(
+        pathinfo(
+            wp_parse_url( $image_url, PHP_URL_PATH ),
+            PATHINFO_EXTENSION
+        )
+    );
 
-    if ( 'jpg' === $extension || 'jpeg' === $extension ) {
-        $image_type = 'image/jpeg';
-    } elseif ( 'png' === $extension ) {
+    // MIME fallback
+    $image_type = 'image/jpeg';
+
+    if ( 'png' === $extension ) {
         $image_type = 'image/png';
     } elseif ( 'webp' === $extension ) {
         $image_type = 'image/webp';
+    } elseif ( 'avif' === $extension ) {
+        $image_type = 'image/avif';
     }
 
     $resources[] = array_filter(

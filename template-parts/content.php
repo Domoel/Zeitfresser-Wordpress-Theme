@@ -23,7 +23,10 @@
         <?php if ( $show_hide_image && has_post_thumbnail() ) : ?>
         <?php $thumbnail_size = get_theme_mod( 'post_snippet_featured_image_size', zeitfresser_get_default_post_snippet_featured_image_size() ); ?>
         <a href="<?php echo esc_url( get_permalink() ); ?>" rel="bookmark" class="featured-image">
-            <?php the_post_thumbnail( $thumbnail_size ); ?>
+            <?php
+            $size = ! empty( $thumbnail_size ) ? $thumbnail_size : 'zeitfresser-card';
+            the_post_thumbnail( $size );
+            ?>
         </a>
         <?php endif; ?>
         <div class="summary">

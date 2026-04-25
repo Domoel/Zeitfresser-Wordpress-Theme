@@ -1,272 +1,548 @@
 <?php
 /**
- * Performance tools for existing media and webfonts.
+ * Performance tools for existing media.
  *
  * @package zeitfresser
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
-	exit;
+    exit;
 }
 
 /**
- * Register the performance tools admin page.
- *
- * @return void
+ * Register admin page
  */
 function zeitfresser_register_performance_tools_page() {
-	add_theme_page(
-		esc_html__( 'Performance Tools', 'zeitfresser' ),
-		esc_html__( 'Performance Tools', 'zeitfresser' ),
-		'manage_options',
-		'zeitfresser-performance-tools',
-		'zeitfresser_render_performance_tools_page'
-	);
+    add_theme_page(
+        'Performance Tools',
+        'Performance Tools',
+        'manage_options',
+        'zeitfresser-performance-tools',
+        'zeitfresser_render_performance_tools_page'
+    );
 }
 add_action( 'admin_menu', 'zeitfresser_register_performance_tools_page' );
 
 /**
- * Count attachments still waiting for one-time optimization.
- *
- * @return int
+ * Count pending images
  */
 function zeitfresser_get_pending_legacy_images_count() {
-	$query = new WP_Query(
-		array(
-			'post_type'              => 'attachment',
-			'post_status'            => 'inherit',
-			'post_mime_type'         => 'image',
-			'fields'                 => 'ids',
-			'posts_per_page'         => 1,
-			'meta_query'             => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
-				array(
-					'key'     => '_zeitfresser_media_optimized',
-					'compare' => 'NOT EXISTS',
-				),
-			),
-			'no_found_rows'          => false,
-			'cache_results'          => false,
-			'update_post_meta_cache' => false,
-			'update_post_term_cache' => false,
-		)
-	);
+    $query = new WP_Query([
+        'post_type'      => 'attachment',
+        'post_status'    => 'inherit',
+        'post_mime_type' => 'image',
+        'fields'         => 'ids',
+        'posts_per_page' => 1,
+        'meta_query'     => [
+            'relation' => 'OR',
+            [
+                'key'     => '_zeitfresser_media_optimized_version',
+                'compare' => 'NOT EXISTS',
+            ],
+            [
+                'key'     => '_zeitfresser_media_optimized_version',
+                'value'   => ZEITFRESSER_IMAGE_OPTIMIZATION_VERSION,
+                'compare' => '!=',
+            ],
+        ],
+        'no_found_rows' => false,
+    ]);
 
-	return (int) $query->found_posts;
+    return (int) $query->found_posts;
 }
 
 /**
- * Process a batch of legacy images with current thumbnail/webp rules.
+ * Count total images
+ */
+function zeitfresser_get_total_images_count() {
+    $query = new WP_Query([
+        'post_type'      => 'attachment',
+        'post_status'    => 'inherit',
+        'post_mime_type' => 'image',
+        'fields'         => 'ids',
+        'posts_per_page' => 1,
+        'no_found_rows'  => false,
+    ]);
+
+    return (int) $query->found_posts;
+}
+
+/**
+ * NEW: Cleanup counters (ONLY ADDITIVE)
+ */
+function zeitfresser_get_total_originals_count() {
+    $query = new WP_Query([
+        'post_type'=>'attachment',
+        'post_status'=>'inherit',
+        'post_mime_type'=>'image',
+        'posts_per_page'=>1,
+        'fields'=>'ids',
+        'meta_query'=>[
+            ['key'=>'_zeitfresser_original_file','compare'=>'EXISTS']
+        ],
+        'no_found_rows'=>false
+    ]);
+    return (int) $query->found_posts;
+}
+
+function zeitfresser_get_remaining_originals_count() {
+    $query = new WP_Query([
+        'post_type'=>'attachment',
+        'post_status'=>'inherit',
+        'post_mime_type'=>'image',
+        'posts_per_page'=>1,
+        'fields'=>'ids',
+        'meta_query'=>[
+            'relation'=>'AND',
+            ['key'=>'_zeitfresser_original_file','compare'=>'EXISTS'],
+            ['key'=>'_zeitfresser_original_deleted','compare'=>'NOT EXISTS']
+        ],
+        'no_found_rows'=>false
+    ]);
+    return (int) $query->found_posts;
+}
+
+/**
+ * DELETE ORIGINALS (UNCHANGED)
+ */
+function zeitfresser_delete_originals_batch( $batch_size = 10 ) {
+
+    $deleted = 0;
+
+    $query = new WP_Query([
+        'post_type'      => 'attachment',
+        'post_status'    => 'inherit',
+        'post_mime_type' => 'image',
+        'fields'         => 'ids',
+        'posts_per_page' => $batch_size,
+        'meta_query' => [
+            'relation' => 'AND',
+            [
+                'key'     => '_zeitfresser_original_file',
+                'compare' => 'EXISTS',
+            ],
+            [
+                'key'     => '_zeitfresser_original_deleted',
+                'compare' => 'NOT EXISTS',
+            ],
+        ],
+    ]);
+
+    foreach ( $query->posts as $attachment_id ) {
+
+        $original = get_post_meta( $attachment_id, '_zeitfresser_original_file', true );
+
+        if ( ! $original ) {
+            continue;
+        }
+
+        $optimized_version = get_post_meta(
+            $attachment_id,
+            '_zeitfresser_media_optimized_version',
+            true
+        );
+
+        if ( ZEITFRESSER_IMAGE_OPTIMIZATION_VERSION !== $optimized_version ) {
+            continue;
+        }
+
+        $ext = strtolower( pathinfo( $original, PATHINFO_EXTENSION ) );
+
+        if ( in_array( $ext, [ 'webp', 'avif' ], true ) ) {
+            update_post_meta( $attachment_id, '_zeitfresser_original_deleted', 1 );
+            continue;
+        }
+
+        if ( ! file_exists( $original ) ) {
+            update_post_meta( $attachment_id, '_zeitfresser_original_deleted', 1 );
+            continue;
+        }
+
+        if ( ! is_writable( $original ) ) {
+            continue;
+        }
+
+        if ( unlink( $original ) ) {
+            $deleted++;
+            update_post_meta( $attachment_id, '_zeitfresser_original_deleted', 1 );
+        }
+    }
+
+    return $deleted;
+}
+
+/**
+ * Optimizer batch for manual processing.
  *
- * @param int $batch_size Number of images to process.
+ * Manual optimization must work independently of the auto-optimize upload toggle.
+ *
+ * @param int $batch_size Number of images per batch.
  * @return array
  */
-function zeitfresser_process_legacy_images_batch( $batch_size = 20 ) {
-	$results = array(
-		'processed' => 0,
-		'updated'   => 0,
-		'skipped'   => 0,
-		'errors'    => 0,
-	);
+function zeitfresser_process_legacy_images_batch( $batch_size = 25 ) {
 
-	$query = new WP_Query(
-		array(
-			'post_type'              => 'attachment',
-			'post_status'            => 'inherit',
-			'post_mime_type'         => 'image',
-			'fields'                 => 'ids',
-			'posts_per_page'         => absint( $batch_size ),
-			'orderby'                => 'ID',
-			'order'                  => 'ASC',
-			'meta_query'             => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
-				array(
-					'key'     => '_zeitfresser_media_optimized',
-					'compare' => 'NOT EXISTS',
-				),
-			),
-			'no_found_rows'          => true,
-			'cache_results'          => false,
-			'update_post_meta_cache' => false,
-			'update_post_term_cache' => false,
-		)
-	);
+    $results = [
+        'processed' => 0,
+        'updated'   => 0,
+        'skipped'   => 0,
+        'errors'    => 0,
+    ];
 
-	if ( empty( $query->posts ) ) {
-		return $results;
-	}
+    $query = new WP_Query([
+        'post_type'      => 'attachment',
+        'post_status'    => 'inherit',
+        'post_mime_type' => 'image',
+        'fields'         => 'ids',
+        'posts_per_page' => $batch_size,
+        'meta_query'     => [
+            'relation' => 'OR',
+            [
+                'key'     => '_zeitfresser_media_optimized_version',
+                'compare' => 'NOT EXISTS',
+            ],
+            [
+                'key'     => '_zeitfresser_media_optimized_version',
+                'value'   => ZEITFRESSER_IMAGE_OPTIMIZATION_VERSION,
+                'compare' => '!=',
+            ],
+        ],
+    ]);
 
-	foreach ( $query->posts as $attachment_id ) {
-		$results['processed']++;
+    // Force optimization for manual tool runs, regardless of upload automation setting.
+    $GLOBALS['zeitfresser_force_image_optimization'] = true;
 
-		$file = get_attached_file( $attachment_id );
+    foreach ( $query->posts as $attachment_id ) {
 
-		if ( empty( $file ) || ! file_exists( $file ) ) {
-			update_post_meta( $attachment_id, '_zeitfresser_media_optimized', 'missing' );
-			$results['skipped']++;
-			continue;
-		}
+        $results['processed']++;
 
-		$metadata = wp_generate_attachment_metadata( $attachment_id, $file );
+        $file = get_attached_file( $attachment_id );
 
-		if ( is_wp_error( $metadata ) || empty( $metadata ) ) {
-			$results['errors']++;
-			continue;
-		}
+        if ( empty( $file ) || ! file_exists( $file ) ) {
+            update_post_meta( $attachment_id, '_zeitfresser_media_optimized_version', 'missing' );
+            $results['skipped']++;
+            continue;
+        }
 
-		wp_update_attachment_metadata( $attachment_id, $metadata );
-		update_post_meta( $attachment_id, '_zeitfresser_media_optimized', current_time( 'mysql' ) );
-		$results['updated']++;
-	}
+        if ( ! get_post_meta( $attachment_id, '_zeitfresser_original_file', true ) ) {
+            update_post_meta( $attachment_id, '_zeitfresser_original_file', $file );
+        }
 
-	return $results;
+        $metadata = wp_generate_attachment_metadata( $attachment_id, $file );
+
+        if ( is_wp_error( $metadata ) || empty( $metadata ) ) {
+            $results['errors']++;
+            continue;
+        }
+
+        wp_update_attachment_metadata( $attachment_id, $metadata );
+
+        update_post_meta(
+            $attachment_id,
+            '_zeitfresser_media_optimized_version',
+            ZEITFRESSER_IMAGE_OPTIMIZATION_VERSION
+        );
+
+        $results['updated']++;
+    }
+
+    unset( $GLOBALS['zeitfresser_force_image_optimization'] );
+
+    return $results;
 }
 
 /**
- * Handle admin actions for performance tools.
- *
- * @return void
+ * AJAX: Optimizer (extended output only)
  */
-function zeitfresser_handle_performance_tools_actions() {
-	if ( ! is_admin() || ! current_user_can( 'manage_options' ) ) {
-		return;
-	}
+function zeitfresser_ajax_optimize_images() {
 
-	if ( empty( $_GET['page'] ) || 'zeitfresser-performance-tools' !== $_GET['page'] ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		return;
-	}
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error();
+    }
 
-	if ( empty( $_GET['zeitfresser_action'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		return;
-	}
+    check_ajax_referer( 'zeitfresser_performance_tools', 'nonce' );
 
-	check_admin_referer( 'zeitfresser_performance_tools' );
+    $results = zeitfresser_process_legacy_images_batch( 25 );
 
-	$action = sanitize_key( wp_unslash( $_GET['zeitfresser_action'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-
-	if ( 'optimize_legacy_images' === $action ) {
-		$results = zeitfresser_process_legacy_images_batch( 25 );
-		$args    = array(
-			'page'      => 'zeitfresser-performance-tools',
-			'processed' => $results['processed'],
-			'updated'   => $results['updated'],
-			'skipped'   => $results['skipped'],
-			'errors'    => $results['errors'],
-		);
-
-		wp_safe_redirect( add_query_arg( $args, admin_url( 'themes.php' ) ) );
-		exit;
-	}
-
-	if ( 'reset_legacy_images' === $action ) {
-		$query = new WP_Query(
-			array(
-				'post_type'              => 'attachment',
-				'post_status'            => 'inherit',
-				'post_mime_type'         => 'image',
-				'fields'                 => 'ids',
-				'posts_per_page'         => -1,
-				'meta_key'               => '_zeitfresser_media_optimized', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
-				'no_found_rows'          => true,
-				'cache_results'          => false,
-				'update_post_meta_cache' => false,
-				'update_post_term_cache' => false,
-			)
-		);
-
-		foreach ( $query->posts as $attachment_id ) {
-			delete_post_meta( $attachment_id, '_zeitfresser_media_optimized' );
-		}
-
-		wp_safe_redirect(
-			add_query_arg(
-				array(
-					'page'  => 'zeitfresser-performance-tools',
-					'reset' => count( $query->posts ),
-				),
-				admin_url( 'themes.php' )
-			)
-		);
-		exit;
-	}
+    wp_send_json_success([
+        'processed' => $results['processed'],
+        'updated'   => $results['updated'],
+        'pending'   => zeitfresser_get_pending_legacy_images_count(),
+        'total'     => zeitfresser_get_total_images_count(),
+    ]);
 }
-add_action( 'admin_init', 'zeitfresser_handle_performance_tools_actions' );
+add_action( 'wp_ajax_zeitfresser_optimize_images', 'zeitfresser_ajax_optimize_images' );
 
 /**
- * Render the performance tools page.
- *
- * @return void
+ * AJAX: Delete (extended ONLY)
+ */
+function zeitfresser_ajax_delete_originals() {
+
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error();
+    }
+
+    check_ajax_referer( 'zeitfresser_performance_tools', 'nonce' );
+
+    $deleted = zeitfresser_delete_originals_batch( 10 );
+
+    $total     = zeitfresser_get_total_originals_count();
+    $remaining = zeitfresser_get_remaining_originals_count();
+
+    wp_send_json_success([
+        'deleted'       => $deleted,
+        'total'         => $total,
+        'remaining'     => $remaining,
+        'deleted_total' => $total - $remaining,
+    ]);
+}
+add_action( 'wp_ajax_zeitfresser_delete_originals', 'zeitfresser_ajax_delete_originals' );
+
+/**
+ * Render UI
  */
 function zeitfresser_render_performance_tools_page() {
-	if ( ! current_user_can( 'manage_options' ) ) {
-		return;
-	}
 
-	$pending = zeitfresser_get_pending_legacy_images_count();
-	$local   = function_exists( 'zeitfresser_get_local_webfonts_css' ) ? zeitfresser_get_local_webfont_urls( zeitfresser_get_local_webfonts_css() ) : array();
-	?>
-	<div class="wrap">
-		<h1><?php esc_html_e( 'Zeitfresser Performance Tools', 'zeitfresser' ); ?></h1>
-		<p><?php esc_html_e( 'Use these tools after major performance updates to warm local fonts and reprocess older uploads with the current image rules.', 'zeitfresser' ); ?></p>
+    if ( ! current_user_can( 'manage_options' ) ) {
+        return;
+    }
 
-		<?php if ( isset( $_GET['updated'] ) || isset( $_GET['reset'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
-			<div class="notice notice-success is-dismissible">
-				<p>
-					<?php
-					if ( isset( $_GET['reset'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-						printf(
-							esc_html__( 'Reset complete. %d legacy image markers removed.', 'zeitfresser' ),
-							absint( $_GET['reset'] ) // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-						);
-					} else {
-						printf(
-							esc_html__( 'Batch finished. Processed: %1$d, updated: %2$d, skipped: %3$d, errors: %4$d.', 'zeitfresser' ),
-							absint( $_GET['processed'] ), // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-							absint( $_GET['updated'] ), // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-							absint( $_GET['skipped'] ), // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-							absint( $_GET['errors'] ) // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-						);
-					}
-					?>
-				</p>
-			</div>
-		<?php endif; ?>
+    $pending   = zeitfresser_get_pending_legacy_images_count();
+    $total     = zeitfresser_get_total_images_count();
+    $optimized = $total - $pending;
+    $progress  = $total > 0 ? round(($optimized / $total) * 100) : 0;
 
-		<div class="card" style="max-width: 880px; padding: 20px;">
-			<h2><?php esc_html_e( 'Legacy Image Optimization', 'zeitfresser' ); ?></h2>
-			<p>
-				<?php
-				printf(
-					esc_html__( '%d image attachments have not been reprocessed with the current size, quality and WebP rules yet.', 'zeitfresser' ),
-					(int) $pending
-				);
-				?>
-			</p>
-			<p><?php esc_html_e( 'Run the batch button repeatedly until the counter reaches zero. This keeps each request small and safe on shared hosting.', 'zeitfresser' ); ?></p>
-			<p>
-				<a class="button button-primary" href="<?php echo esc_url( wp_nonce_url( add_query_arg( array( 'page' => 'zeitfresser-performance-tools', 'zeitfresser_action' => 'optimize_legacy_images' ), admin_url( 'themes.php' ) ), 'zeitfresser_performance_tools' ) ); ?>">
-					<?php esc_html_e( 'Process Next 25 Images', 'zeitfresser' ); ?>
-				</a>
-				<a class="button" href="<?php echo esc_url( wp_nonce_url( add_query_arg( array( 'page' => 'zeitfresser-performance-tools', 'zeitfresser_action' => 'reset_legacy_images' ), admin_url( 'themes.php' ) ), 'zeitfresser_performance_tools' ) ); ?>">
-					<?php esc_html_e( 'Reset Progress', 'zeitfresser' ); ?>
-				</a>
-			</p>
-		</div>
+    // 🔥 NEW: Cleanup counters
+    $cleanup_total     = zeitfresser_get_total_originals_count();
+    $cleanup_remaining = zeitfresser_get_remaining_originals_count();
+    $cleanup_deleted   = $cleanup_total - $cleanup_remaining;
+    $cleanup_progress  = $cleanup_total > 0 ? round(($cleanup_deleted / $cleanup_total) * 100) : 0;
+?>
 
-		<div class="card" style="max-width: 880px; padding: 20px; margin-top: 20px;">
-			<h2><?php esc_html_e( 'Local Font Warmup', 'zeitfresser' ); ?></h2>
-			<p><?php esc_html_e( 'Zeitfresser now prefers locally cached Google font files for the currently selected font families. When the cache is available, the theme preloads the local files and no longer needs the external stylesheet request.', 'zeitfresser' ); ?></p>
-			<p>
-				<?php
-				if ( empty( $local ) ) {
-					esc_html_e( 'Local font files are not cached yet. Visit the front-end once after saving your font settings to warm the cache.', 'zeitfresser' );
-				} else {
-					printf(
-						esc_html__( 'Local font files ready: %d preloadable assets detected.', 'zeitfresser' ),
-						count( $local )
-					);
-				}
-				?>
-			</p>
-		</div>
-	</div>
-	<?php
+<div class="wrap">
+    <h1>Zeitfresser Performance Tools</h1>
+    
+    <div class="notice notice-info" style="max-width:800px;margin-top:20px;">
+        <p>
+            <strong>How this tool works</strong><br><br>
+
+            This tool helps you optimize your existing media library for better performance.<br><br>
+
+            • Images are converted to modern formats (AVIF/WebP) for smaller file sizes.<br>
+            • The original file path is safely stored before optimization.<br>
+            • Once optimized, original images can be deleted to save disk space.<br><br>
+
+            <strong>Automation:</strong><br>
+            • You can enable automatic optimization on upload in the Customizer under <em>Performance Tools Settings</em>.<br>
+            • Optionally, original images can also be deleted automatically after successful optimization.<br><br>
+
+            <strong>Safety:</strong><br>
+            • Images are only processed once per version.<br>
+            • Original files are only deleted when safe.<br>
+            • The tool can be run multiple times without side effects.<br><br>
+
+            <em><strong>Tip:</strong> You can either automate the process via the Customizer or use this tool manually for full control.</em>
+        </p>
+    </div>
+
+    <!-- OPTIMIZATION -->
+    <div class="card" style="max-width:800px;padding:24px;margin-bottom:20px;">
+
+        <h2 style="margin-top:0;">🚀 Image Optimization</h2>
+
+        <div style="margin-bottom:20px;">
+            <p><strong>Total Images:</strong> <span id="total"><?php echo $total; ?></span></p>
+            <p><strong>Optimized:</strong> <span id="optimized"><?php echo $optimized; ?></span></p>
+            <p><strong>Pending:</strong> <span id="remaining"><?php echo $pending; ?></span></p>
+        </div>
+
+        <div style="margin-bottom:20px;">
+            <div style="background:#e0e0e0;border-radius:6px;height:12px;">
+                <div id="progress-bar" style="width:<?php echo $progress; ?>%;background:#4caf50;height:100%;"></div>
+            </div>
+            <p><strong>Progress:</strong> <span id="progress"><?php echo $progress; ?></span>%</p>
+        </div>
+
+        <button id="start-btn" class="button button-primary">🚀 Optimize Images</button>
+    </div>
+
+    <!-- CLEANUP -->
+    <div class="card" style="max-width:800px;padding:24px;">
+
+        <h2>🧹 Original Cleanup</h2>
+
+        <div style="margin-bottom:20px;">
+            <p><strong>Total Originals:</strong> <span id="cleanup-total"><?php echo $cleanup_total; ?></span></p>
+            <p><strong>Deleted:</strong> <span id="cleanup-deleted"><?php echo $cleanup_deleted; ?></span></p>
+            <p><strong>Remaining:</strong> <span id="cleanup-remaining"><?php echo $cleanup_remaining; ?></span></p>
+        </div>
+
+        <div style="margin-bottom:20px;">
+            <div style="background:#e0e0e0;border-radius:6px;height:12px;">
+                <div id="cleanup-bar" style="width:<?php echo $cleanup_progress; ?>%;background:<?php echo $cleanup_progress === 100 ? '#4caf50' : '#ff9800'; ?>;height:100%;"></div>
+            </div>
+            <p><strong>Cleanup Progress:</strong> <span id="cleanup-progress"><?php echo $cleanup_progress; ?></span>%</p>
+        </div>
+
+        <button id="delete-btn" class="button">🧹 Delete Originals</button>
+    </div>
+
+    <!-- STATUS -->
+    <div style="padding:12px;background:#f6f7f7;border-radius:6px;">
+        <p id="status-opt">🚀 Optimizer: Idle</p>
+        <p id="status-clean">🧹 Cleanup: Idle</p>
+    </div>
+
+</div>
+
+<style>
+#progress-bar,
+#cleanup-bar {
+    transition: width 0.35s ease, background 0.3s ease;
+}
+</style>
+
+<script>
+let running = false;
+let deleting = false;
+
+(function initCleanupBar() {
+    const bar = document.getElementById('cleanup-bar');
+    const progress = parseInt(document.getElementById('cleanup-progress').innerText, 10);
+
+    if (!bar || isNaN(progress)) return;
+
+    if (progress >= 100) {
+        bar.style.background = '#4caf50';
+    } else if (progress > 0) {
+        bar.style.background = '#ff9800';
+    }
+})();
+
+document.getElementById('start-btn').onclick = () => {
+    running = true;
+
+    document.getElementById('start-btn').disabled = true;
+    document.getElementById('delete-btn').disabled = true;
+
+    document.getElementById('start-btn').innerText = '⏳ Running...';
+    document.getElementById('status-opt').innerText = '🚀 Optimizing images...';
+
+    processBatch();
+};
+
+document.getElementById('delete-btn').onclick = () => {
+    deleting = true;
+
+    document.getElementById('start-btn').disabled = true;
+    document.getElementById('delete-btn').disabled = true;
+
+    document.getElementById('delete-btn').innerText = '⏳ Running...';
+    document.getElementById('status-clean').innerText = '🧹 Cleaning originals...';
+
+    deleteBatch();
+};
+
+function deleteBatch() {
+    if (!deleting) return;
+
+    fetch(ajaxurl, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: new URLSearchParams({
+            action: 'zeitfresser_delete_originals',
+            nonce: '<?php echo wp_create_nonce('zeitfresser_performance_tools'); ?>'
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        let total     = data.data.total;
+        let remaining = data.data.remaining;
+        let deleted   = data.data.deleted_total;
+        let batch     = data.data.deleted;
+
+        let progress = total > 0 ? Math.round((deleted / total) * 100) : 0;
+
+        // Update Cleanup UI
+        document.getElementById('cleanup-total').innerText = total;
+        document.getElementById('cleanup-deleted').innerText = deleted;
+        document.getElementById('cleanup-remaining').innerText = remaining;
+        document.getElementById('cleanup-progress').innerText = progress;
+        
+        let bar = document.getElementById('cleanup-bar');
+
+        bar.style.width = progress + '%';
+
+        if (progress >= 100) {
+            bar.style.background = '#4caf50';
+        } else if (progress > 0) {
+            bar.style.background = '#ff9800';
+        }
+
+        document.getElementById('status-clean').innerText = '🧹 Deleted: ' + batch;
+
+        if (remaining > 0) {
+            setTimeout(deleteBatch, 400);
+        } else {
+            deleting = false;
+
+            document.getElementById('start-btn').disabled = false;
+            document.getElementById('delete-btn').disabled = false;
+
+            document.getElementById('delete-btn').innerText = '🧹 Delete Originals';
+
+            document.getElementById('status-clean').innerText = '✔ Cleanup complete';
+        }
+    });
+}
+
+function processBatch() {
+    if (!running) return;
+
+    fetch(ajaxurl, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: new URLSearchParams({
+            action: 'zeitfresser_optimize_images',
+            nonce: '<?php echo wp_create_nonce('zeitfresser_performance_tools'); ?>'
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        let pending   = data.data.pending;
+        let total     = data.data.total;
+        let optimized = total - pending;
+        let progress  = total > 0 ? Math.round((optimized / total) * 100) : 0;
+
+        // Live update optimization counters
+        document.getElementById('total').innerText = total;
+        document.getElementById('optimized').innerText = optimized;
+        document.getElementById('remaining').innerText = pending;
+
+        // Live update progress UI
+        document.getElementById('progress').innerText = progress;
+        document.getElementById('progress-bar').style.width = progress + '%';
+
+        document.getElementById('status-opt').innerText =
+            '🚀 Processed: ' + data.data.processed +
+            ' | Updated: ' + data.data.updated;
+
+        if (pending > 0) {
+            setTimeout(processBatch, 400);
+        } else {
+            running = false;
+
+            document.getElementById('start-btn').disabled = false;
+            document.getElementById('delete-btn').disabled = false;
+
+            document.getElementById('start-btn').innerText = '🚀 Optimize Images';
+
+            document.getElementById('status-opt').innerText = '✔ Optimization complete';
+        }
+    });
+}
+</script>
+
+<?php
 }
