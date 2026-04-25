@@ -103,7 +103,118 @@ function zeitfresser_get_remaining_originals_count() {
 }
 
 /**
- * DELETE ORIGINALS (UNCHANGED)
+ * Build a list of original-format files belonging to one attachment.
+ *
+ * This includes:
+ * - the original uploaded file
+ * - the original-format main generated file (e.g. scaled JPG)
+ * - original-format sub-size files derived from attachment metadata
+ *
+ * @param int    $attachment_id Attachment ID.
+ * @param string $original      Absolute path to the original uploaded file.
+ * @return array
+ */
+function zeitfresser_get_original_family_files( $attachment_id, $original ) {
+
+    $files = [];
+
+    if ( empty( $original ) ) {
+        return $files;
+    }
+
+    $original_ext = strtolower( pathinfo( $original, PATHINFO_EXTENSION ) );
+
+    if ( empty( $original_ext ) ) {
+        return $files;
+    }
+
+    $files[] = $original;
+
+    $metadata   = wp_get_attachment_metadata( $attachment_id );
+    $upload_dir = wp_get_upload_dir();
+
+    if ( ! empty( $metadata['file'] ) ) {
+        $current_main_absolute = trailingslashit( $upload_dir['basedir'] ) . $metadata['file'];
+
+        $files[] = preg_replace(
+            '/\.[^.]+$/',
+            '.' . $original_ext,
+            $current_main_absolute
+        );
+
+        $current_dir = dirname( $current_main_absolute );
+
+        if ( ! empty( $metadata['sizes'] ) && is_array( $metadata['sizes'] ) ) {
+            foreach ( $metadata['sizes'] as $size ) {
+                if ( empty( $size['file'] ) ) {
+                    continue;
+                }
+
+                $files[] = $current_dir . '/' . preg_replace(
+                    '/\.[^.]+$/',
+                    '.' . $original_ext,
+                    $size['file']
+                );
+            }
+        }
+    }
+
+    $files = array_unique( array_filter( $files ) );
+
+    return array_values( $files );
+}
+
+/**
+ * Check whether any original-format family files still exist.
+ *
+ * @param int    $attachment_id Attachment ID.
+ * @param string $original      Absolute path to the original uploaded file.
+ * @return bool
+ */
+function zeitfresser_original_family_exists( $attachment_id, $original ) {
+
+    $files = zeitfresser_get_original_family_files( $attachment_id, $original );
+
+    foreach ( $files as $file ) {
+        if ( file_exists( $file ) ) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/**
+ * Delete all original-format files belonging to one attachment.
+ *
+ * @param int    $attachment_id Attachment ID.
+ * @param string $original      Absolute path to the original uploaded file.
+ * @return int Number of deleted files.
+ */
+function zeitfresser_delete_original_family_files( $attachment_id, $original ) {
+
+    $deleted_files = 0;
+    $files         = zeitfresser_get_original_family_files( $attachment_id, $original );
+
+    foreach ( $files as $file ) {
+        if ( ! file_exists( $file ) ) {
+            continue;
+        }
+
+        if ( ! is_writable( $file ) ) {
+            continue;
+        }
+
+        if ( unlink( $file ) ) {
+            $deleted_files++;
+        }
+    }
+
+    return $deleted_files;
+}
+
+/**
+ * DELETE ORIGINALS (manual batch)
  */
 function zeitfresser_delete_originals_batch( $batch_size = 10 ) {
 
@@ -115,7 +226,7 @@ function zeitfresser_delete_originals_batch( $batch_size = 10 ) {
         'post_mime_type' => 'image',
         'fields'         => 'ids',
         'posts_per_page' => $batch_size,
-        'meta_query' => [
+        'meta_query'     => [
             'relation' => 'AND',
             [
                 'key'     => '_zeitfresser_original_file',
@@ -153,16 +264,16 @@ function zeitfresser_delete_originals_batch( $batch_size = 10 ) {
             continue;
         }
 
-        if ( ! file_exists( $original ) ) {
+        // Nothing left to delete -> mark as done.
+        if ( ! zeitfresser_original_family_exists( $attachment_id, $original ) ) {
             update_post_meta( $attachment_id, '_zeitfresser_original_deleted', 1 );
             continue;
         }
 
-        if ( ! is_writable( $original ) ) {
-            continue;
-        }
+        zeitfresser_delete_original_family_files( $attachment_id, $original );
 
-        if ( unlink( $original ) ) {
+        // Only mark as deleted when the full original family is gone.
+        if ( ! zeitfresser_original_family_exists( $attachment_id, $original ) ) {
             $deleted++;
             update_post_meta( $attachment_id, '_zeitfresser_original_deleted', 1 );
         }

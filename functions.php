@@ -558,12 +558,10 @@ add_filter(
 
 function zeitfresser_auto_delete_original_after_upload( $metadata, $attachment_id ) {
 
-    // 🔒 only images
     if ( ! wp_attachment_is_image( $attachment_id ) ) {
         return $metadata;
     }
 
-    // 🔒 feature toggles
     if ( ! get_theme_mod( 'ztfr_auto_optimize', true ) ) {
         return $metadata;
     }
@@ -578,11 +576,10 @@ function zeitfresser_auto_delete_original_after_upload( $metadata, $attachment_i
         true
     );
 
-    if ( ! $original || ! file_exists( $original ) ) {
+    if ( ! $original ) {
         return $metadata;
     }
 
-    // skip modern formats
     $ext = strtolower( pathinfo( $original, PATHINFO_EXTENSION ) );
 
     if ( in_array( $ext, [ 'webp', 'avif' ], true ) ) {
@@ -590,12 +587,16 @@ function zeitfresser_auto_delete_original_after_upload( $metadata, $attachment_i
         return $metadata;
     }
 
-    if ( ! is_writable( $original ) ) {
+    // If nothing remains, mark as completed.
+    if ( ! zeitfresser_original_family_exists( $attachment_id, $original ) ) {
+        update_post_meta( $attachment_id, '_zeitfresser_original_deleted', 1 );
         return $metadata;
     }
 
-    // 🔥 delete original
-    if ( unlink( $original ) ) {
+    zeitfresser_delete_original_family_files( $attachment_id, $original );
+
+    // Only mark as deleted when all original-format files are gone.
+    if ( ! zeitfresser_original_family_exists( $attachment_id, $original ) ) {
         update_post_meta( $attachment_id, '_zeitfresser_original_deleted', 1 );
     }
 
