@@ -87,18 +87,66 @@ function zeitfresser_get_total_originals_count() {
 
 function zeitfresser_get_remaining_originals_count() {
     $query = new WP_Query([
-        'post_type'=>'attachment',
-        'post_status'=>'inherit',
-        'post_mime_type'=>'image',
-        'posts_per_page'=>1,
-        'fields'=>'ids',
-        'meta_query'=>[
-            'relation'=>'AND',
-            ['key'=>'_zeitfresser_original_file','compare'=>'EXISTS'],
-            ['key'=>'_zeitfresser_original_deleted','compare'=>'NOT EXISTS']
+        'post_type'      => 'attachment',
+        'post_status'    => 'inherit',
+        'post_mime_type' => 'image',
+        'posts_per_page' => 1,
+        'fields'         => 'ids',
+        'meta_query'     => [
+            'relation' => 'AND',
+            [
+                'key'     => '_zeitfresser_original_file',
+                'compare' => 'EXISTS',
+            ],
+            [
+                'key'     => '_zeitfresser_original_deleted',
+                'compare' => 'NOT EXISTS',
+            ],
+            [
+                'key'     => '_zeitfresser_media_optimized_version',
+                'value'   => ZEITFRESSER_IMAGE_OPTIMIZATION_VERSION,
+                'compare' => '=',
+            ],
         ],
-        'no_found_rows'=>false
+        'no_found_rows' => false,
     ]);
+
+    return (int) $query->found_posts;
+}
+
+function zeitfresser_get_unoptimized_originals_count() {
+    $query = new WP_Query([
+        'post_type'      => 'attachment',
+        'post_status'    => 'inherit',
+        'post_mime_type' => 'image',
+        'posts_per_page' => 1,
+        'fields'         => 'ids',
+        'meta_query'     => [
+            'relation' => 'AND',
+            [
+                'key'     => '_zeitfresser_original_file',
+                'compare' => 'EXISTS',
+            ],
+            [
+                'key'     => '_zeitfresser_original_deleted',
+                'compare' => 'NOT EXISTS',
+            ],
+            [
+                'relation' => 'OR',
+                [
+                    'key'     => '_zeitfresser_media_optimized_version',
+                    'compare' => 'NOT EXISTS',
+                ],
+                [
+                    'key'     => '_zeitfresser_media_optimized_version',
+                    'value'   => ZEITFRESSER_IMAGE_OPTIMIZATION_VERSION,
+                    'compare' => '!=',
+                ],
+            ],
+        ],
+        'no_found_rows' => false,
+    ]);
+
     return (int) $query->found_posts;
 }
 
@@ -374,11 +422,27 @@ function zeitfresser_ajax_optimize_images() {
 
     $results = zeitfresser_process_legacy_images_batch( 25 );
 
+    $pending             = zeitfresser_get_pending_legacy_images_count();
+    $total               = zeitfresser_get_total_images_count();
+
+    $cleanup_total       = zeitfresser_get_total_originals_count();
+    $cleanup_remaining   = zeitfresser_get_remaining_originals_count();
+    $cleanup_unoptimized = zeitfresser_get_unoptimized_originals_count();
+    $cleanup_deleted     = $cleanup_total - ( $cleanup_remaining + $cleanup_unoptimized );
+    $cleanup_progress    = $cleanup_total > 0
+        ? round( ( $cleanup_deleted / $cleanup_total ) * 100 )
+        : 0;
+
     wp_send_json_success([
-        'processed' => $results['processed'],
-        'updated'   => $results['updated'],
-        'pending'   => zeitfresser_get_pending_legacy_images_count(),
-        'total'     => zeitfresser_get_total_images_count(),
+        'processed'            => $results['processed'],
+        'updated'              => $results['updated'],
+        'pending'              => $pending,
+        'total'                => $total,
+        'cleanup_total'        => $cleanup_total,
+        'cleanup_remaining'    => $cleanup_remaining,
+        'cleanup_unoptimized'  => $cleanup_unoptimized,
+        'cleanup_deleted'      => $cleanup_deleted,
+        'cleanup_progress'     => $cleanup_progress,
     ]);
 }
 add_action( 'wp_ajax_zeitfresser_optimize_images', 'zeitfresser_ajax_optimize_images' );
@@ -394,16 +458,18 @@ function zeitfresser_ajax_delete_originals() {
 
     check_ajax_referer( 'zeitfresser_performance_tools', 'nonce' );
 
-    $deleted = zeitfresser_delete_originals_batch( 10 );
-
-    $total     = zeitfresser_get_total_originals_count();
-    $remaining = zeitfresser_get_remaining_originals_count();
+    $deleted       = zeitfresser_delete_originals_batch( 10 );
+    $total         = zeitfresser_get_total_originals_count();
+    $remaining     = zeitfresser_get_remaining_originals_count();
+    $unoptimized   = zeitfresser_get_unoptimized_originals_count();
+    $deleted_total = $total - ( $remaining + $unoptimized );
 
     wp_send_json_success([
         'deleted'       => $deleted,
         'total'         => $total,
         'remaining'     => $remaining,
-        'deleted_total' => $total - $remaining,
+        'unoptimized'   => $unoptimized,
+        'deleted_total' => $deleted_total,
     ]);
 }
 add_action( 'wp_ajax_zeitfresser_delete_originals', 'zeitfresser_ajax_delete_originals' );
@@ -423,10 +489,24 @@ function zeitfresser_render_performance_tools_page() {
     $progress  = $total > 0 ? round(($optimized / $total) * 100) : 0;
 
     // 🔥 NEW: Cleanup counters
-    $cleanup_total     = zeitfresser_get_total_originals_count();
-    $cleanup_remaining = zeitfresser_get_remaining_originals_count();
-    $cleanup_deleted   = $cleanup_total - $cleanup_remaining;
-    $cleanup_progress  = $cleanup_total > 0 ? round(($cleanup_deleted / $cleanup_total) * 100) : 0;
+    $cleanup_total       = zeitfresser_get_total_originals_count();
+    $cleanup_remaining   = zeitfresser_get_remaining_originals_count();
+    $cleanup_unoptimized = zeitfresser_get_unoptimized_originals_count();
+    $cleanup_deleted     = $cleanup_total - ( $cleanup_remaining + $cleanup_unoptimized );
+    $cleanup_progress    = $cleanup_total > 0 ? round(($cleanup_deleted / $cleanup_total) * 100) : 0;
+    
+    $cleanup_nothing_to_do = (
+        0 === $cleanup_remaining &&
+        (
+            $cleanup_unoptimized > 0 ||
+            $cleanup_deleted >= $cleanup_total
+        )
+    );
+
+    $cleanup_button_disabled = $cleanup_nothing_to_do;
+    $cleanup_button_label    = $cleanup_nothing_to_do
+        ? '🧹 Nothing to clean yet'
+        : '🧹 Delete Originals';
 ?>
 
 <div class="wrap">
@@ -484,7 +564,8 @@ function zeitfresser_render_performance_tools_page() {
         <div style="margin-bottom:20px;">
             <p><strong>Total Originals:</strong> <span id="cleanup-total"><?php echo $cleanup_total; ?></span></p>
             <p><strong>Deleted:</strong> <span id="cleanup-deleted"><?php echo $cleanup_deleted; ?></span></p>
-            <p><strong>Remaining:</strong> <span id="cleanup-remaining"><?php echo $cleanup_remaining; ?></span></p>
+            <p><strong>Ready for Cleanup:</strong> <span id="cleanup-remaining"><?php echo $cleanup_remaining; ?></span></p>
+            <p><strong>Not Optimized Yet:</strong> <span id="cleanup-unoptimized"><?php echo $cleanup_unoptimized; ?></span></p>
         </div>
 
         <div style="margin-bottom:20px;">
@@ -494,7 +575,9 @@ function zeitfresser_render_performance_tools_page() {
             <p><strong>Cleanup Progress:</strong> <span id="cleanup-progress"><?php echo $cleanup_progress; ?></span>%</p>
         </div>
 
-        <button id="delete-btn" class="button">🧹 Delete Originals</button>
+        <button id="delete-btn" class="button" <?php disabled( $cleanup_button_disabled ); ?>>
+            <?php echo esc_html( $cleanup_button_label ); ?>
+        </button>
     </div>
 
     <!-- STATUS -->
@@ -567,10 +650,11 @@ function deleteBatch() {
     .then(res => res.json())
     .then(data => {
 
-        let total     = data.data.total;
-        let remaining = data.data.remaining;
-        let deleted   = data.data.deleted_total;
-        let batch     = data.data.deleted;
+        let total       = data.data.total;
+        let remaining   = data.data.remaining;
+        let deleted     = data.data.deleted_total;
+        let batch       = data.data.deleted;
+        let unoptimized = data.data.unoptimized;
 
         let progress = total > 0 ? Math.round((deleted / total) * 100) : 0;
 
@@ -578,10 +662,10 @@ function deleteBatch() {
         document.getElementById('cleanup-total').innerText = total;
         document.getElementById('cleanup-deleted').innerText = deleted;
         document.getElementById('cleanup-remaining').innerText = remaining;
+        document.getElementById('cleanup-unoptimized').innerText = unoptimized;
         document.getElementById('cleanup-progress').innerText = progress;
-        
-        let bar = document.getElementById('cleanup-bar');
 
+        let bar = document.getElementById('cleanup-bar');
         bar.style.width = progress + '%';
 
         if (progress >= 100) {
@@ -590,7 +674,23 @@ function deleteBatch() {
             bar.style.background = '#ff9800';
         }
 
-        document.getElementById('status-clean').innerText = '🧹 Deleted: ' + batch;
+        if (batch > 0) {
+            document.getElementById('status-clean').innerText = '🧹 Deleted: ' + batch;
+        }
+
+        // Nothing cleanup-eligible remains, but originals still exist and are not optimized
+        if (remaining === 0 && unoptimized > 0) {
+            deleting = false;
+
+            document.getElementById('start-btn').disabled = false;
+            document.getElementById('delete-btn').disabled = true;
+            document.getElementById('delete-btn').innerText = '🧹 Nothing to clean yet';
+
+            document.getElementById('status-clean').innerText =
+                '⚠ Available images are not optimized yet. Please optimize them before starting cleanup.';
+
+            return;
+        }
 
         if (remaining > 0) {
             setTimeout(deleteBatch, 400);
@@ -598,9 +698,17 @@ function deleteBatch() {
             deleting = false;
 
             document.getElementById('start-btn').disabled = false;
-            document.getElementById('delete-btn').disabled = false;
 
-            document.getElementById('delete-btn').innerText = '🧹 Delete Originals';
+            if (remaining === 0 && unoptimized > 0) {
+                document.getElementById('delete-btn').disabled = true;
+                document.getElementById('delete-btn').innerText = '🧹 Nothing to clean yet';
+            } else if (remaining === 0 && total === deleted) {
+                document.getElementById('delete-btn').disabled = true;
+                document.getElementById('delete-btn').innerText = '🧹 Nothing to clean yet';
+            } else {
+                document.getElementById('delete-btn').disabled = false;
+                document.getElementById('delete-btn').innerText = '🧹 Delete Originals';
+            }
 
             document.getElementById('status-clean').innerText = '✔ Cleanup complete';
         }
@@ -631,9 +739,34 @@ function processBatch() {
         document.getElementById('optimized').innerText = optimized;
         document.getElementById('remaining').innerText = pending;
 
-        // Live update progress UI
+        // Live update optimization progress
         document.getElementById('progress').innerText = progress;
         document.getElementById('progress-bar').style.width = progress + '%';
+
+        // Live update cleanup counters
+        document.getElementById('cleanup-total').innerText = data.data.cleanup_total;
+        document.getElementById('cleanup-deleted').innerText = data.data.cleanup_deleted;
+        document.getElementById('cleanup-remaining').innerText = data.data.cleanup_remaining;
+        document.getElementById('cleanup-unoptimized').innerText = data.data.cleanup_unoptimized;
+        document.getElementById('cleanup-progress').innerText = data.data.cleanup_progress;
+
+        const cleanupBar = document.getElementById('cleanup-bar');
+        cleanupBar.style.width = data.data.cleanup_progress + '%';
+
+        if (data.data.cleanup_progress >= 100) {
+            cleanupBar.style.background = '#4caf50';
+        } else if (data.data.cleanup_progress > 0) {
+            cleanupBar.style.background = '#ff9800';
+        }
+
+        // Update cleanup button state based on fresh server data
+        if (data.data.cleanup_remaining === 0 && data.data.cleanup_unoptimized > 0) {
+            document.getElementById('delete-btn').disabled = true;
+            document.getElementById('delete-btn').innerText = '🧹 Nothing to clean yet';
+        } else {
+            document.getElementById('delete-btn').disabled = false;
+            document.getElementById('delete-btn').innerText = '🧹 Delete Originals';
+        }
 
         document.getElementById('status-opt').innerText =
             '🚀 Processed: ' + data.data.processed +
@@ -645,10 +778,10 @@ function processBatch() {
             running = false;
 
             document.getElementById('start-btn').disabled = false;
-            document.getElementById('delete-btn').disabled = false;
+            document.getElementById('delete-btn').disabled =
+                (data.data.cleanup_remaining === 0 && data.data.cleanup_unoptimized > 0);
 
             document.getElementById('start-btn').innerText = '🚀 Optimize Images';
-
             document.getElementById('status-opt').innerText = '✔ Optimization complete';
         }
     });

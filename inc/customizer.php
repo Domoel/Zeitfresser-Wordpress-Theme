@@ -84,7 +84,7 @@ function zeitfresser_customize_register( $wp_customize ) {
 			'type'        => 'checkbox',
 			'section'     => 'ztfr_performance_tools',
 			'label'       => 'Auto Delete Original Pictures on Upload',
-			'description' => 'Automatically deletes original images after optimization. ⚠️ This action cannot be undone.',
+			'description' => 'Automatically deletes original images after optimization.',
 		)
 	);
 }
@@ -236,3 +236,29 @@ function zeitfresser_customize_controls_dependency_js() {
 	<?php
 }
 add_action( 'customize_controls_enqueue_scripts', 'zeitfresser_customize_controls_dependency_js' );
+
+add_action( 'customize_controls_enqueue_scripts', function() {
+    ?>
+    <style>
+        /* 🔥 Settings Label Bolt */
+        #customize-control-ztfr_auto_optimize label,
+        #customize-control-ztfr_auto_delete label {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 2px;
+            line-height: 1.4;
+        }
+
+        /* 🔥 Warning line under description */
+        #customize-control-ztfr_auto_delete .description::after {
+            content: "⚠ This action cannot be undone.";
+            display: block;
+            margin-top: 6px;
+            color: #b32d2e;
+            font-weight: 500;
+        }
+    </style>
+    <?php
+});
+
+
