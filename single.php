@@ -17,7 +17,9 @@ $show_hide_related_posts = get_theme_mod(
 <div id="primary" class="inside-page content-area">
     <div class="container">
         <div class="main-wrapper">
-
+            
+            <?php zeitfresser_render_floating_toc(); ?>
+            
             <section class="page-section full-width-view">
                 <div class="detail-content">
 

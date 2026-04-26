@@ -10,6 +10,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
+ * Enqueue TOC script when needed.
+ */
+function zeitfresser_enqueue_toc_assets() {
+
+    if ( ! is_singular( 'post' ) ) {
+        return;
+    }
+
+    if ( ! zeitfresser_has_floating_toc() ) {
+        return;
+    }
+
+    $asset = zeitfresser_asset_versioned('/js/toc.js');
+
+    wp_enqueue_script(
+        'zeitfresser-toc',
+        $asset['url'],
+        [],
+        $asset['version'],
+        true
+    );
+}
+add_action( 'wp_enqueue_scripts', 'zeitfresser_enqueue_toc_assets', 20 );
+
+/**
  * Return whether article TOC output is enabled.
  *
  * @return bool

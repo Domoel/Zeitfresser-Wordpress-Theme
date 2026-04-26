@@ -1,6 +1,8 @@
 document.addEventListener('DOMContentLoaded', function () {
     var toc = document.getElementById('zeitfresser-floating-toc');
-    var title = document.querySelector('.zeitfresser-article-heading .page-title, .zeitfresser-article-heading .entry-title, .entry-header .entry-title');
+    var title = document.querySelector(
+        '.entry-header .entry-title, .page-title, h1'
+    );
     var progressBar = document.getElementById('zeitfresser-floating-toc-progress');
     var nav = toc ? toc.querySelector('.zeitfresser-floating-toc__nav') : null;
 
@@ -67,12 +69,11 @@ document.addEventListener('DOMContentLoaded', function () {
         var titleRect = title.getBoundingClientRect();
         var scrollTop = window.scrollY || window.pageYOffset || 0;
 
-        var contentColumn = document.querySelector(
-            '.inside-page .main-wrapper > *:first-child, ' +
-            '.inside-page .main-wrapper .primary-content, ' +
-            '.inside-page .main-wrapper #primary, ' +
-            '.inside-page .main-wrapper main'
-        );
+        var contentColumn =
+            document.querySelector('.inside-page .container') ||
+            document.querySelector('#primary') ||
+            document.querySelector('.content-area') ||
+            title;
 
         var sidebar = document.querySelector(
             '.inside-page .main-wrapper > aside, ' +
