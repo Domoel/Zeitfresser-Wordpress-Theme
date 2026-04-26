@@ -130,9 +130,7 @@ Using caching, a CDN, and optimized hosting will further improve performance, es
 
 ## 🛠 Development & Support
 
-If you want to get support or participate in development, you can join the  
-<a href="https://ztfr.eu/matrix">Zeitfresser Matrix Community</a> or the  
-<a href="https://look.ztfr.eu/#/#support:ztfr.eu">Development & Support Channel</a>.
+If you want to get support or participate in development, you can join the <a href="https://ztfr.eu/matrix">Zeitfresser Matrix Community</a> or the <a href="https://look.ztfr.eu/#/#support:ztfr.eu">Development & Support Channel</a>.
 
 ## 📄 License
 
