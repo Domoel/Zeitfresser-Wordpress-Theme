@@ -4,34 +4,63 @@
  *
  * @package zeitfresser
  */
- 
+
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+/**
+ * ------------------------------------------------------------------------
+ * Theme Constants
+ * ------------------------------------------------------------------------
+ */
 if ( ! defined( 'ZEITFRESSER_VERSION' ) ) {
     define( 'ZEITFRESSER_VERSION', '2.3.6' );
-}
-
-if ( ! defined( 'DAISY_BLOG_VERSION' ) ) {
-    define( 'DAISY_BLOG_VERSION', ZEITFRESSER_VERSION );
 }
 
 if ( ! defined( 'ZEITFRESSER_IMAGE_OPTIMIZATION_VERSION' ) ) {
     define( 'ZEITFRESSER_IMAGE_OPTIMIZATION_VERSION', '1.0' );
 }
 
-require get_template_directory() . '/inc/zeitfresser-helpers.php';
-require get_template_directory() . '/inc/performance-tools.php';
+/**
+ * ------------------------------------------------------------------------
+ * Core Modules
+ * ------------------------------------------------------------------------
+ */
+
+// Helpers (foundation)
+require get_template_directory() . '/inc/helpers/zeitfresser-helpers.php';
+
+// Theme logic
 require get_template_directory() . '/inc/zeitfresser-toc.php';
 
-/**
- * Upload Handler
- */
-add_filter('wp_handle_upload', 'zeitfresser_capture_original_upload', 10, 2);
+// Performance layer
+require get_template_directory() . '/inc/performance/performance-tools.php';
 
 /**
- * Capture original upload path safely
+ * ------------------------------------------------------------------------
+ * Customizer (modular)
+ * ------------------------------------------------------------------------
+ */
+require get_template_directory() . '/inc/customizer/core.php';
+require get_template_directory() . '/inc/customizer/general.php';
+require get_template_directory() . '/inc/customizer/layout.php';
+require get_template_directory() . '/inc/customizer/toc.php';
+require get_template_directory() . '/inc/customizer/social.php';
+
+/**
+ * ------------------------------------------------------------------------
+ * Theme Utilities
+ * ------------------------------------------------------------------------
+ */
+require get_template_directory() . '/inc/template-tags.php';
+require get_template_directory() . '/inc/template-functions.php';
+require get_template_directory() . '/inc/pagination.php';
+
+/**
+ * ------------------------------------------------------------------------
+ * Upload Handling (Original File Tracking)
+ * ------------------------------------------------------------------------
  */
 function zeitfresser_capture_original_upload( $upload, $context ) {
 
@@ -80,69 +109,64 @@ function zeitfresser_store_original_file( $attachment_id ) {
 add_action( 'add_attachment', 'zeitfresser_store_original_file' );
 
 /**
- * Theme setup.
- *
- * @return void
+ * ------------------------------------------------------------------------
+ * Theme Setup
+ * ------------------------------------------------------------------------
  */
 function zeitfresser_setup() {
+
     load_theme_textdomain( 'zeitfresser', get_template_directory() . '/languages' );
 
     add_theme_support( 'automatic-feed-links' );
     add_theme_support( 'title-tag' );
     add_theme_support( 'post-thumbnails' );
-    add_theme_support(
-        'html5',
-        array(
-            'search-form',
-            'comment-form',
-            'comment-list',
-            'gallery',
-            'caption',
-            'style',
-            'script',
-        )
-    );
+
+    add_theme_support( 'html5', array(
+        'search-form',
+        'comment-form',
+        'comment-list',
+        'gallery',
+        'caption',
+        'style',
+        'script',
+    ));
+
     add_theme_support( 'customize-selective-refresh-widgets' );
-    add_theme_support(
-        'custom-logo',
-        array(
-            'height'      => 250,
-            'width'       => 250,
-            'flex-width'  => true,
-            'flex-height' => true,
-        )
-    );
+
+    add_theme_support( 'custom-logo', array(
+        'height'      => 250,
+        'width'       => 250,
+        'flex-width'  => true,
+        'flex-height' => true,
+    ));
+
     add_theme_support( 'align-wide' );
     add_theme_support( 'wp-block-styles' );
     add_theme_support( 'responsive-embeds' );
 
-    register_nav_menus(
-        array(
-            'menu-1' => esc_html__( 'Primary', 'zeitfresser' ),
-        )
-    );
+    register_nav_menus( array(
+        'menu-1' => esc_html__( 'Primary', 'zeitfresser' ),
+    ));
 
     add_editor_style( 'editor-style.css' );
 }
 add_action( 'after_setup_theme', 'zeitfresser_setup' );
 
 /**
- * Register optimized image sizes
+ * ------------------------------------------------------------------------
+ * Image Sizes
+ * ------------------------------------------------------------------------
  */
 function zeitfresser_custom_image_sizes() {
-
-    // Content images (main article)
     add_image_size( 'zeitfresser-content', 720, 0, false );
-
-    // Archive / card layout
     add_image_size( 'zeitfresser-card', 480, 0, false );
 }
 add_action( 'after_setup_theme', 'zeitfresser_custom_image_sizes' );
 
 /**
- * Set the content width in pixels.
- *
- * @return void
+ * ------------------------------------------------------------------------
+ * Content Width
+ * ------------------------------------------------------------------------
  */
 function zeitfresser_content_width() {
     $GLOBALS['content_width'] = apply_filters( 'zeitfresser_content_width', 640 );
@@ -150,206 +174,243 @@ function zeitfresser_content_width() {
 add_action( 'after_setup_theme', 'zeitfresser_content_width', 0 );
 
 /**
- * Register widget area.
- *
- * @return void
+ * ------------------------------------------------------------------------
+ * Widgets
+ * ------------------------------------------------------------------------
  */
 function zeitfresser_widgets_init() {
-    register_sidebar(
-        array(
-            'name'          => esc_html__( 'Sidebar', 'zeitfresser' ),
-            'id'            => 'sidebar-1',
-            'description'   => esc_html__( 'Add widgets here.', 'zeitfresser' ),
-            'before_widget' => '<section id="%1$s" class="widget %2$s">',
-            'after_widget'  => '</section>',
-            'before_title'  => '<h4 class="widget-title">',
-            'after_title'   => '</h4>',
-        )
-    );
+    register_sidebar( array(
+        'name'          => esc_html__( 'Sidebar', 'zeitfresser' ),
+        'id'            => 'sidebar-1',
+        'description'   => esc_html__( 'Add widgets here.', 'zeitfresser' ),
+        'before_widget' => '<section id="%1$s" class="widget %2$s">',
+        'after_widget'  => '</section>',
+        'before_title'  => '<h4 class="widget-title">',
+        'after_title'   => '</h4>',
+    ));
 }
 add_action( 'widgets_init', 'zeitfresser_widgets_init' );
 
 /**
- * Enqueue floating TOC assets on single posts.
- *
- * @return void
- */
-function zeitfresser_enqueue_toc_assets() {
-	if ( is_singular( 'post' ) && zeitfresser_has_floating_toc() ) {
-		wp_enqueue_script(
-			'zeitfresser-toc',
-			get_template_directory_uri() . '/js/toc.js',
-			array(),
-			ZEITFRESSER_VERSION,
-			true
-		);
-	}
-}
-add_action( 'wp_enqueue_scripts', 'zeitfresser_enqueue_toc_assets', 20 );
-
-
-/**
- * Return file version using filemtime in production-safe form.
- *
- * @param string $relative_path Relative file path inside the theme.
- * @return string
- */
-function zeitfresser_asset_version( $relative_path ) {
-    $path = get_template_directory() . $relative_path;
-    return file_exists( $path ) ? (string) filemtime( $path ) : ZEITFRESSER_VERSION;
-}
-
-/**
- * Enqueue scripts and styles.
- *
- * @return void
+ * ------------------------------------------------------------------------
+ * Assets
+ * ------------------------------------------------------------------------
  */
 function zeitfresser_scripts() {
+
+    // Base stylesheet (theme root)
     wp_enqueue_style(
         'zeitfresser',
         get_template_directory_uri() . '/style.css',
-        array(),
-        zeitfresser_asset_version( '/style.css' )
+        [],
+        file_exists( get_template_directory() . '/style.css' )
+            ? filemtime( get_template_directory() . '/style.css' )
+            : ZEITFRESSER_VERSION
     );
+
+    // Styles
+    $fonts  = zeitfresser_asset_versioned('/css/fonts.css');
+    $colors = zeitfresser_asset_versioned('/css/colors.css');
+
+    wp_enqueue_style(
+        'zeitfresser-fonts',
+        $fonts['url'],
+        [],
+        $fonts['version']
+    );
+
+    wp_enqueue_style(
+        'zeitfresser-colors',
+        $colors['url'],
+        ['zeitfresser'],
+        $colors['version']
+    );
+
+    // Scripts
+    $nav     = zeitfresser_asset_versioned('/js/navigation.js');
+    $scripts = zeitfresser_asset_versioned('/js/scripts.js');
 
     wp_enqueue_script(
         'zeitfresser-navigation',
-        get_template_directory_uri() . '/js/navigation.js',
-        array(),
-        zeitfresser_asset_version( '/js/navigation.js' ),
+        $nav['url'],
+        [],
+        $nav['version'],
         true
     );
-
-    if ( is_home() || is_front_page() || is_archive() || is_search() ) {
-        wp_enqueue_script(
-            'zeitfresser-masonry',
-            get_template_directory_uri() . '/js/masonry.pkgd.min.js',
-            array(),
-            zeitfresser_asset_version( '/js/masonry.pkgd.min.js' ),
-            true
-        );
-    }
 
     wp_enqueue_script(
         'zeitfresser-scripts',
-        get_template_directory_uri() . '/js/scripts.js',
-        array(),
-        zeitfresser_asset_version( '/js/scripts.js' ),
+        $scripts['url'],
+        [],
+        $scripts['version'],
         true
     );
 
+    // WordPress native threaded comments
     if ( is_singular() && comments_open() && get_option( 'thread_comments' ) ) {
         wp_enqueue_script( 'comment-reply' );
     }
 }
 add_action( 'wp_enqueue_scripts', 'zeitfresser_scripts', 10 );
 
-
 /**
- * Load RTL stylesheet from /css folder
+ * ------------------------------------------------------------------------
+ * Performance Tweaks
+ * ------------------------------------------------------------------------
  */
-function zeitfresser_rtl_styles() {
-    if ( is_rtl() ) {
-        wp_enqueue_style(
-            'zeitfresser-rtl',
-            get_template_directory_uri() . '/css/style-rtl.css',
-            array('zeitfresser'),
-            filemtime(get_template_directory() . '/css/style-rtl.css')
-        );
+ 
+ /**
+ * ------------------------------------------------------------------------
+ * Defer non-critical JavaScript
+ * ------------------------------------------------------------------------
+ *
+ * Prevents JS from blocking page rendering.
+ */
+function zeitfresser_defer_scripts( $tag, $handle, $src ) {
+
+    $defer_scripts = array(
+        'zeitfresser-navigation',
+        'zeitfresser-scripts',
+    );
+
+    if ( in_array( $handle, $defer_scripts, true ) ) {
+        return str_replace( ' src=', ' defer src=', $tag );
     }
-}
-add_action( 'wp_enqueue_scripts', 'zeitfresser_rtl_styles', 11 );
 
-function zeitfresser_enqueue_static_colors() {
-    wp_enqueue_style(
-        'zeitfresser-colors',
-        get_template_directory_uri() . '/css/colors.css',
-        array('zeitfresser'),
-        file_exists(get_template_directory() . '/css/colors.css')
-            ? filemtime(get_template_directory() . '/css/colors.css')
-            : ZEITFRESSER_VERSION
-    );
+    return $tag;
 }
-add_action( 'wp_enqueue_scripts', 'zeitfresser_enqueue_static_colors', 20 );
-
-function zeitfresser_enqueue_static_fonts() {
-    wp_enqueue_style(
-        'zeitfresser-fonts',
-        get_template_directory_uri() . '/css/fonts.css',
-        array(),
-        file_exists(get_template_directory() . '/css/fonts.css')
-            ? filemtime(get_template_directory() . '/css/fonts.css')
-            : ZEITFRESSER_VERSION
-    );
-}
-add_action( 'wp_enqueue_scripts', 'zeitfresser_enqueue_static_fonts', 15 );
-
+add_filter( 'script_loader_tag', 'zeitfresser_defer_scripts', 10, 3 );
+ 
 /**
- * Theme package marker kept for compatibility with the original premium controls.
+ * ------------------------------------------------------------------------
+ * Image Loading Optimization (LCP + Lazy Loading)
+ * ------------------------------------------------------------------------
  *
- * @return string
+ * Ensures the first visible image loads immediately (LCP),
+ * while all other images are lazy-loaded for performance.
  */
-function zeitfresser_free_pro() {
-    return 'pro';
-}
+function zeitfresser_optimize_image_attributes( $attr, $attachment, $size ) {
 
-require get_template_directory() . '/inc/template-tags.php';
-require get_template_directory() . '/inc/template-functions.php';
-require get_template_directory() . '/inc/customizer.php';
+    static $is_first = true;
 
-if ( defined( 'JETPACK__VERSION' ) ) {
-    require get_template_directory() . '/inc/jetpack.php';
-}
-
-require get_template_directory() . '/inc/blocks/blocks.php';
-require get_template_directory() . '/inc/pagination.php';
-
-/**
- * Add safe front-end performance optimizations.
- *
- * @return void
- */
-function zeitfresser_performance_setup() {
-    // Disable the legacy embeds script on the front end. Native iframes still work.
     if ( ! is_admin() ) {
-        wp_deregister_script( 'wp-embed' );
+
+        if ( $is_first ) {
+            // First image (critical for LCP)
+            $attr['loading'] = 'eager';
+            $is_first = false;
+        } else {
+            // All other images
+            $attr['loading'] = 'lazy';
+        }
+
+        // Improve decoding performance
+        $attr['decoding'] = 'async';
     }
+
+    return $attr;
 }
-add_action( 'wp_enqueue_scripts', 'zeitfresser_performance_setup', 100 );
+add_filter( 'wp_get_attachment_image_attributes', 'zeitfresser_optimize_image_attributes', 10, 3 );
 
 /**
- * Remove unnecessary head output for a leaner front end.
+ * Lower the threshold for WordPress scaled originals when auto optimization is enabled.
  *
- * @return void
+ * When automatic optimization is disabled, original uploads should remain untouched.
+ *
+ * @return int|false
  */
-function zeitfresser_cleanup_wp_head() {
-    remove_action( 'wp_head', 'print_emoji_detection_script', 7 );
-    remove_action( 'wp_print_styles', 'print_emoji_styles' );
-    remove_action( 'admin_print_scripts', 'print_emoji_detection_script' );
-    remove_action( 'admin_print_styles', 'print_emoji_styles' );
-    remove_action( 'wp_head', 'rsd_link' );
-    remove_action( 'wp_head', 'wlwmanifest_link' );
-    remove_action( 'wp_head', 'wp_generator' );
-    remove_action( 'wp_head', 'rest_output_link_wp_head', 10 );
-    remove_action( 'wp_head', 'wp_shortlink_wp_head', 10 );
-    remove_action( 'wp_head', 'wp_oembed_add_discovery_links', 10 );
-    remove_action( 'wp_head', 'wp_oembed_add_host_js' );
-    remove_action( 'wp_head', 'adjacent_posts_rel_link_wp_head', 10 );
+function zeitfresser_big_image_size_threshold() {
+
+    $auto_enabled  = get_theme_mod( 'ztfr_auto_optimize', true );
+    $force_enabled = ! empty( $GLOBALS['zeitfresser_force_image_optimization'] );
+
+    if ( ! $auto_enabled && ! $force_enabled ) {
+        return false;
+    }
+
+    return 1800;
 }
-add_action( 'init', 'zeitfresser_cleanup_wp_head' );
+add_filter( 'big_image_size_threshold', 'zeitfresser_big_image_size_threshold' );
 
 /**
- * Preload critical local fonts only
+ * Skip generating oversized core intermediate sizes we do not use.
+ *
+ * @param array $sizes Registered intermediate sizes.
+ * @return array
+ */
+function zeitfresser_filter_intermediate_image_sizes( $sizes ) {
+
+    $auto_enabled  = get_theme_mod( 'ztfr_auto_optimize', true );
+    $force_enabled = ! empty( $GLOBALS['zeitfresser_force_image_optimization'] );
+
+    if ( ! $auto_enabled && ! $force_enabled ) {
+        return $sizes;
+    }
+
+    unset(
+        $sizes['1536x1536'],
+        $sizes['2048x2048']
+    );
+
+    return $sizes;
+}
+add_filter( 'intermediate_image_sizes_advanced', 'zeitfresser_filter_intermediate_image_sizes' );
+
+/**
+ * Improve attachment image attributes for layout stability and fetch priority.
+ *
+ * @param array        $attr       Image markup attributes.
+ * @param WP_Post      $attachment Attachment post object.
+ * @param string|array $size       Requested image size.
+ * @return array
+ */
+function zeitfresser_improve_attachment_dimensions( $attr, $attachment, $size ) {
+
+    if ( empty( $attr['width'] ) || empty( $attr['height'] ) ) {
+        $metadata = wp_get_attachment_metadata( $attachment->ID );
+
+        if ( is_array( $metadata ) && ! empty( $metadata['width'] ) && ! empty( $metadata['height'] ) ) {
+            if ( empty( $attr['width'] ) ) {
+                $attr['width'] = (int) $metadata['width'];
+            }
+
+            if ( empty( $attr['height'] ) ) {
+                $attr['height'] = (int) $metadata['height'];
+            }
+        }
+    }
+
+    if ( empty( $attr['fetchpriority'] ) && ! is_admin() && ! is_feed() ) {
+        static $did_set_high_priority = false;
+
+        if ( ! $did_set_high_priority && is_singular() ) {
+            $attr['fetchpriority'] = 'high';
+            $did_set_high_priority = true;
+        }
+    }
+
+    return $attr;
+}
+add_filter( 'wp_get_attachment_image_attributes', 'zeitfresser_improve_attachment_dimensions', 11, 3 );
+
+/**
+ * ------------------------------------------------------------------------
+ * Preload critical fonts
+ * ------------------------------------------------------------------------
+ *
+ * Preloads only the fonts that are needed for initial rendering
+ * (headings + body text). This improves LCP and avoids render delays.
  */
 function zeitfresser_preload_fonts() {
     ?>
     <!-- Critical Fonts Only -->
-    <link rel="preload" href="<?php echo get_template_directory_uri(); ?>/fonts/oswald-400.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="<?php echo get_template_directory_uri(); ?>/fonts/oswald-700.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="<?php echo get_template_directory_uri(); ?>/fonts/roboto-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="<?php echo zeitfresser_asset('/fonts/oswald-400.woff2'); ?>" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="<?php echo zeitfresser_asset('/fonts/oswald-700.woff2'); ?>" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="<?php echo zeitfresser_asset('/fonts/roboto-400.woff2'); ?>" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="<?php echo zeitfresser_asset('/fonts/roboto-500.woff2'); ?>" as="font" type="font/woff2" crossorigin>
     <?php
 }
-add_action('wp_head', 'zeitfresser_preload_fonts', 1);
+add_action('wp_head', 'zeitfresser_preload_fonts', 0);
 
 /**
  * Optimize font loading with preconnect
@@ -368,72 +429,61 @@ add_filter( 'wp_resource_hints', function( $urls, $relation_type ) {
 }, 10, 2 );
 
 /**
- * Remove front-end dashicons for visitors.
+ * ------------------------------------------------------------------------
+ * Critical CSS (inline for faster first render)
+ * ------------------------------------------------------------------------
  *
- * @return void
+ * We inline only the minimal CSS required for initial layout.
+ * This ensures the page structure renders immediately without
+ * waiting for the full stylesheet.
  */
-function zeitfresser_maybe_dequeue_dashicons() {
-    if ( ! is_user_logged_in() ) {
-        wp_deregister_style( 'dashicons' );
+function zeitfresser_inline_critical_css() {
+    ?>
+    <style>
+        body {
+            margin: 0;
+            background: #1e1f29;
+        }
+
+        .container {
+            max-width: var(--container-width, 1140px);
+            margin: 0 auto;
+            padding: 0 70px;
+        }
+
+        @media (max-width: 800px) {
+            .container {
+                padding: 0 20px;
+            }
+        }
+
+        .custom-grid-view {
+            display: grid;
+        }
+
+        header.site-header {
+            background: var(--light-color);
+        }
+    </style>
+    <?php
+}
+add_action('wp_head', 'zeitfresser_inline_critical_css', 1);
+
+function zeitfresser_performance_setup() {
+    if ( ! is_admin() ) {
+        wp_deregister_script( 'wp-embed' );
     }
 }
-add_action( 'wp_enqueue_scripts', 'zeitfresser_maybe_dequeue_dashicons', 100 );
+add_action( 'wp_enqueue_scripts', 'zeitfresser_performance_setup', 100 );
 
-/**
- * Improve image decoding defaults without changing visual output.
- *
- * @param array        $attr       Image markup attributes.
- * @param WP_Post      $attachment Attachment post object.
- * @param string|array $size       Requested image size.
- * @return array
- */
-function zeitfresser_optimize_image_attributes( $attr, $attachment, $size ) {
-    if ( empty( $attr['decoding'] ) ) {
-        $attr['decoding'] = 'async';
-    }
-
-    if ( empty( $attr['loading'] ) && ! is_admin() ) {
-        $attr['loading'] = 'lazy';
-    }
-
-    return $attr;
+function zeitfresser_cleanup_wp_head() {
+    remove_action( 'wp_head', 'print_emoji_detection_script', 7 );
+    remove_action( 'wp_print_styles', 'print_emoji_styles' );
+    remove_action( 'wp_head', 'rsd_link' );
+    remove_action( 'wp_head', 'wlwmanifest_link' );
+    remove_action( 'wp_head', 'wp_generator' );
 }
-add_filter( 'wp_get_attachment_image_attributes', 'zeitfresser_optimize_image_attributes', 10, 3 );
-
-/**
- * Lower the threshold for WordPress scaled originals when auto optimization is enabled.
- *
- * When automatic optimization is disabled, original uploads should remain untouched.
- *
- * @return int|false
- */
-function zeitfresser_big_image_size_threshold() {
-
-    if ( ! get_theme_mod( 'ztfr_auto_optimize', true ) ) {
-        return false;
-    }
-
-    return 1800;
-}
-add_filter( 'big_image_size_threshold', 'zeitfresser_big_image_size_threshold' );
-
-/**
- * Skip generating oversized core intermediate sizes we do not use.
- *
- * @param array $sizes Registered intermediate sizes.
- * @return array
- */
-function zeitfresser_filter_intermediate_image_sizes( $sizes ) {
-
-    // Remove oversized defaults
-    unset(
-        $sizes['1536x1536'],
-        $sizes['2048x2048']
-    );
-
-    return $sizes;
-}
-add_filter( 'intermediate_image_sizes_advanced', 'zeitfresser_filter_intermediate_image_sizes' );
+add_action( 'init', 'zeitfresser_cleanup_wp_head' );
 
 /**
  * Convert generated JPEG and PNG files to AVIF/WebP when enabled.
@@ -513,12 +563,12 @@ add_filter(
 
 function zeitfresser_auto_optimize_on_upload( $metadata, $attachment_id ) {
 
-    // 🔒 only images
+    // Only images
     if ( ! wp_attachment_is_image( $attachment_id ) ) {
         return $metadata;
     }
 
-    // 🔒 feature toggle
+    // Feature toggle
     if ( ! get_theme_mod( 'ztfr_auto_optimize', true ) ) {
         return $metadata;
     }
@@ -529,14 +579,12 @@ function zeitfresser_auto_optimize_on_upload( $metadata, $attachment_id ) {
         return $metadata;
     }
 
-    // 🔥 DO NOT overwrite upload-captured original
+    // DO NOT overwrite captured original
     if ( ! get_post_meta( $attachment_id, '_zeitfresser_original_file', true ) ) {
-
-        // fallback only
         update_post_meta( $attachment_id, '_zeitfresser_original_file', $file );
     }
 
-    // mark as optimized
+    // Mark optimized (IMPORTANT: no re-trigger here)
     update_post_meta(
         $attachment_id,
         '_zeitfresser_media_optimized_version',
@@ -562,11 +610,10 @@ function zeitfresser_auto_delete_original_after_upload( $metadata, $attachment_i
         return $metadata;
     }
 
-    if ( ! get_theme_mod( 'ztfr_auto_optimize', true ) ) {
-        return $metadata;
-    }
+    $auto_enabled  = get_theme_mod( 'ztfr_auto_optimize', true );
+    $delete_enabled = get_theme_mod( 'ztfr_auto_delete', false );
 
-    if ( ! get_theme_mod( 'ztfr_auto_delete', false ) ) {
+    if ( ! $auto_enabled || ! $delete_enabled ) {
         return $metadata;
     }
 
@@ -582,20 +629,22 @@ function zeitfresser_auto_delete_original_after_upload( $metadata, $attachment_i
 
     $ext = strtolower( pathinfo( $original, PATHINFO_EXTENSION ) );
 
+    // Skip modern formats
     if ( in_array( $ext, [ 'webp', 'avif' ], true ) ) {
         update_post_meta( $attachment_id, '_zeitfresser_original_deleted', 1 );
         return $metadata;
     }
 
-    // If nothing remains, mark as completed.
+    // 🔥 Wenn nichts mehr existiert → fertig
     if ( ! zeitfresser_original_family_exists( $attachment_id, $original ) ) {
         update_post_meta( $attachment_id, '_zeitfresser_original_deleted', 1 );
         return $metadata;
     }
 
+    // 🔥 HIER passiert der Fix
     zeitfresser_delete_original_family_files( $attachment_id, $original );
 
-    // Only mark as deleted when all original-format files are gone.
+    // Final check
     if ( ! zeitfresser_original_family_exists( $attachment_id, $original ) ) {
         update_post_meta( $attachment_id, '_zeitfresser_original_deleted', 1 );
     }
@@ -612,55 +661,20 @@ function zeitfresser_auto_delete_original_after_upload( $metadata, $attachment_i
  */
 function zeitfresser_image_quality( $quality, $mime_type = 'image/jpeg' ) {
 
-    switch ( $mime_type ) {
-        case 'image/avif':
-            return 50;
+    $auto_enabled  = get_theme_mod( 'ztfr_auto_optimize', true );
+    $force_enabled = ! empty( $GLOBALS['zeitfresser_force_image_optimization'] );
 
-        case 'image/webp':
-            return 75;
-
-        case 'image/jpeg':
-        default:
-            return 82;
+    if ( ! $auto_enabled && ! $force_enabled ) {
+        return $quality;
     }
+
+    return match ($mime_type) {
+        'image/avif' => 50,
+        'image/webp' => 75,
+        default => 82,
+    };
 }
 add_filter( 'wp_editor_set_quality', 'zeitfresser_image_quality', 10, 2 );
-
-/**
- * Improve attachment image attributes for layout stability and fetch priority.
- *
- * @param array        $attr       Image markup attributes.
- * @param WP_Post      $attachment Attachment post object.
- * @param string|array $size       Requested image size.
- * @return array
- */
-function zeitfresser_improve_attachment_dimensions( $attr, $attachment, $size ) {
-    if ( empty( $attr['width'] ) || empty( $attr['height'] ) ) {
-        $metadata = wp_get_attachment_metadata( $attachment->ID );
-
-        if ( is_array( $metadata ) && ! empty( $metadata['width'] ) && ! empty( $metadata['height'] ) ) {
-            if ( empty( $attr['width'] ) ) {
-                $attr['width'] = (int) $metadata['width'];
-            }
-
-            if ( empty( $attr['height'] ) ) {
-                $attr['height'] = (int) $metadata['height'];
-            }
-        }
-    }
-
-    if ( empty( $attr['fetchpriority'] ) && ! is_admin() && ! is_feed() ) {
-        static $did_set_high_priority = false;
-
-        if ( ! $did_set_high_priority && is_singular() ) {
-            $attr['fetchpriority'] = 'high';
-            $did_set_high_priority = true;
-        }
-    }
-
-    return $attr;
-}
-add_filter( 'wp_get_attachment_image_attributes', 'zeitfresser_improve_attachment_dimensions', 11, 3 );
 
 /**
  * Improve responsive image sizes attribute.
@@ -684,111 +698,3 @@ function zeitfresser_responsive_image_sizes( $sizes, $size ) {
     return $sizes;
 }
 add_filter( 'wp_calculate_image_sizes', 'zeitfresser_responsive_image_sizes', 10, 2 );
-
-/**
- * Determine the most likely LCP image URL.
- *
- * @return string
- */
-function zeitfresser_get_lcp_image_url() {
-
-    // Single posts/pages → featured image
-    if ( is_singular() ) {
-        $post_id = get_queried_object_id();
-
-        if ( $post_id && has_post_thumbnail( $post_id ) ) {
-            return get_the_post_thumbnail_url( $post_id, 'large' );
-        }
-    }
-
-    // Archives / homepage → first post with thumbnail
-    if ( is_home() || is_front_page() || is_archive() || is_search() ) {
-
-        global $wp_query;
-
-        if ( ! empty( $wp_query->posts ) ) {
-
-            foreach ( $wp_query->posts as $post ) {
-                if ( has_post_thumbnail( $post->ID ) ) {
-                    return get_the_post_thumbnail_url( $post->ID, 'medium_large' );
-                }
-            }
-        }
-    }
-
-    return '';
-}
-
-/**
- * Preload the most likely LCP image for archive and singular views.
- *
- * @param array $resources Existing preload resources.
- * @return array
- */
-function zeitfresser_preload_resources( $resources ) {
-
-    if ( is_admin() || is_feed() || is_embed() ) {
-        return $resources;
-    }
-
-    // 🔥 NEW: use smart detection
-    $image_url = zeitfresser_get_lcp_image_url();
-
-    if ( empty( $image_url ) ) {
-        return $resources;
-    }
-
-    // Robust extension detection
-    $extension = strtolower(
-        pathinfo(
-            wp_parse_url( $image_url, PHP_URL_PATH ),
-            PATHINFO_EXTENSION
-        )
-    );
-
-    // MIME fallback
-    $image_type = 'image/jpeg';
-
-    if ( 'png' === $extension ) {
-        $image_type = 'image/png';
-    } elseif ( 'webp' === $extension ) {
-        $image_type = 'image/webp';
-    } elseif ( 'avif' === $extension ) {
-        $image_type = 'image/avif';
-    }
-
-    $resources[] = array_filter(
-        array(
-            'href'          => esc_url( $image_url ),
-            'as'            => 'image',
-            'type'          => $image_type,
-            'fetchpriority' => 'high',
-        )
-    );
-
-    return $resources;
-}
-add_filter( 'wp_preload_resources', 'zeitfresser_preload_resources' );
-
-/**
- * Improve script loading strategy for non-critical assets.
- *
- * @param array  $tag    Script tag markup.
- * @param string $handle Script handle.
- * @param string $src    Script source URL.
- * @return string
- */
-function zeitfresser_defer_non_critical_scripts( $tag, $handle, $src ) {
-    $deferred_handles = array(
-        'zeitfresser-navigation',
-        'zeitfresser-masonry',
-        'zeitfresser-scripts',
-    );
-
-    if ( in_array( $handle, $deferred_handles, true ) && false === strpos( $tag, ' defer' ) ) {
-        return str_replace( ' src=', ' defer src=', $tag );
-    }
-
-    return $tag;
-}
-add_filter( 'script_loader_tag', 'zeitfresser_defer_non_critical_scripts', 10, 3 );

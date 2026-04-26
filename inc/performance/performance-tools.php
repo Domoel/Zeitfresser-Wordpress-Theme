@@ -171,19 +171,25 @@ function zeitfresser_get_original_family_files( $attachment_id, $original ) {
     }
 
     $original_ext = strtolower( pathinfo( $original, PATHINFO_EXTENSION ) );
+    $base_name    = pathinfo( $original, PATHINFO_FILENAME );
+    $dir          = dirname( $original );
 
     if ( empty( $original_ext ) ) {
         return $files;
     }
 
+    // Original
     $files[] = $original;
 
+    // --- ORIGINAL LOGIC (metadata-based) ---
     $metadata   = wp_get_attachment_metadata( $attachment_id );
     $upload_dir = wp_get_upload_dir();
 
     if ( ! empty( $metadata['file'] ) ) {
+
         $current_main_absolute = trailingslashit( $upload_dir['basedir'] ) . $metadata['file'];
 
+        // scaled/main
         $files[] = preg_replace(
             '/\.[^.]+$/',
             '.' . $original_ext,
@@ -207,9 +213,12 @@ function zeitfresser_get_original_family_files( $attachment_id, $original ) {
         }
     }
 
-    $files = array_unique( array_filter( $files ) );
+    // --- NEW: FILESYSTEM FALLBACK (CRITICAL FIX) ---
+    foreach ( glob( $dir . '/' . $base_name . '*.' . $original_ext ) as $file ) {
+        $files[] = $file;
+    }
 
-    return array_values( $files );
+    return array_values( array_unique( array_filter( $files ) ) );
 }
 
 /**

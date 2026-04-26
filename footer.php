@@ -5,7 +5,10 @@
  * @package zeitfresser
  */
 
-$copyright = get_theme_mod( 'footer_copyright_text', zeitfresser_get_default_footer_copyright() );
+$copyright = get_theme_mod(
+    'footer_copyright_text',
+    '© ' . date('Y') . ' Zeitfresser'
+);
 ?>
 
 <footer id="colophon" class="site-footer">

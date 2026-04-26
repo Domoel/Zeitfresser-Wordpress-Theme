@@ -1,18 +1,13 @@
 <?php
 /**
- * daisy blog Theme Customizer
+ * Theme Customizer Core
  *
  * @package zeitfresser
  */
 
-/**
- * Add postMessage support for site title and description for the Theme Customizer.
- *
- * @param WP_Customize_Manager $wp_customize Theme Customizer object.
- * @return void
- */
 function zeitfresser_customize_register( $wp_customize ) {
 
+	// Live Preview support
 	$wp_customize->get_setting( 'blogname' )->transport         = 'postMessage';
 	$wp_customize->get_setting( 'blogdescription' )->transport  = 'postMessage';
 	$wp_customize->get_setting( 'header_textcolor' )->transport = 'postMessage';
@@ -36,7 +31,7 @@ function zeitfresser_customize_register( $wp_customize ) {
 	}
 
 	/**
-	 * Performance Tools section
+	 * Performance Tools Section
 	 */
 	$wp_customize->add_section(
 		'ztfr_performance_tools',
@@ -47,7 +42,7 @@ function zeitfresser_customize_register( $wp_customize ) {
 	);
 
 	/**
-	 * Auto optimize uploaded images.
+	 * Auto Optimize
 	 */
 	$wp_customize->add_setting(
 		'ztfr_auto_optimize',
@@ -63,12 +58,12 @@ function zeitfresser_customize_register( $wp_customize ) {
 			'type'        => 'checkbox',
 			'section'     => 'ztfr_performance_tools',
 			'label'       => 'Auto Optimize Pictures on Upload',
-			'description' => 'Automatically converts uploaded images to modern formats (AVIF/WebP) for improved performance.',
+			'description' => 'Automatically converts images to AVIF/WebP.',
 		)
 	);
 
 	/**
-	 * Auto delete originals after successful optimization.
+	 * Auto Delete
 	 */
 	$wp_customize->add_setting(
 		'ztfr_auto_delete',
@@ -83,35 +78,26 @@ function zeitfresser_customize_register( $wp_customize ) {
 		array(
 			'type'        => 'checkbox',
 			'section'     => 'ztfr_performance_tools',
-			'label'       => 'Auto Delete Original Pictures on Upload',
-			'description' => 'Automatically deletes original images after optimization.',
+			'label'       => 'Auto Delete Original Pictures',
+			'description' => 'Deletes originals after optimization.',
 		)
 	);
 }
 add_action( 'customize_register', 'zeitfresser_customize_register' );
 
 /**
- * Render the site title for the selective refresh partial.
- *
- * @return void
+ * Partial refresh helpers
  */
 function zeitfresser_customize_partial_blogname() {
 	bloginfo( 'name' );
 }
 
-/**
- * Render the site tagline for the selective refresh partial.
- *
- * @return void
- */
 function zeitfresser_customize_partial_blogdescription() {
 	bloginfo( 'description' );
 }
 
 /**
- * Bind JS handlers to make Theme Customizer preview reload changes asynchronously.
- *
- * @return void
+ * Live preview JS
  */
 function zeitfresser_customize_preview_js() {
 	wp_enqueue_script(
@@ -125,20 +111,19 @@ function zeitfresser_customize_preview_js() {
 add_action( 'customize_preview_init', 'zeitfresser_customize_preview_js' );
 
 /**
- * Add dependency logic and status box for Performance Tools settings.
- *
- * @return void
+ * Dependency UI logic
  */
 function zeitfresser_customize_controls_dependency_js() {
 	?>
 	<script>
 	(function() {
+
 		function getOptimizeInput() {
-			return document.querySelector('#customize-control-ztfr_auto_optimize input[type="checkbox"]');
+			return document.querySelector('#customize-control-ztfr_auto_optimize input');
 		}
 
 		function getDeleteInput() {
-			return document.querySelector('#customize-control-ztfr_auto_delete input[type="checkbox"]');
+			return document.querySelector('#customize-control-ztfr_auto_delete input');
 		}
 
 		function getDeleteControl() {
@@ -146,17 +131,14 @@ function zeitfresser_customize_controls_dependency_js() {
 		}
 
 		function ensureStatusBox() {
+
 			let box = document.getElementById('ztfr-auto-status-box');
 
-			if (box) {
-				return box;
-			}
+			if (box) return box;
 
 			const optimizeControl = document.getElementById('customize-control-ztfr_auto_optimize');
 
-			if (!optimizeControl || !optimizeControl.parentNode) {
-				return null;
-			}
+			if (!optimizeControl || !optimizeControl.parentNode) return null;
 
 			box = document.createElement('li');
 			box.id = 'ztfr-auto-status-box';
@@ -199,66 +181,64 @@ function zeitfresser_customize_controls_dependency_js() {
 		}
 
 		function init() {
-			updateState();
 
-			document.addEventListener('change', function(event) {
-				const target = event.target;
+	        let attempts = 0;
 
-				if (
-					target &&
-					(
-						target.matches('#customize-control-ztfr_auto_optimize input[type="checkbox"]') ||
-						target.matches('#customize-control-ztfr_auto_delete input[type="checkbox"]')
-					)
-				) {
-					updateState();
-				}
-			});
+	        function tryInit() {
+		        const optimize = getOptimizeInput();
+		        const del = getDeleteInput();
 
-			let tries = 0;
-			const interval = setInterval(function() {
-				updateState();
-				tries++;
+		        if (optimize && del) {
+			        updateState();
+			        return;
+		        }
 
-				if (tries > 20) {
-					clearInterval(interval);
-				}
-			}, 300);
-		}
+		        // Retry max 10x
+		        if (attempts < 10) {
+			        attempts++;
+			        setTimeout(tryInit, 200);
+		        }
+	        }
+
+	        tryInit();
+
+	        document.addEventListener('change', function(e) {
+		        if (
+			        e.target &&
+			        (
+				        e.target.matches('#customize-control-ztfr_auto_optimize input') ||
+				        e.target.matches('#customize-control-ztfr_auto_delete input')
+			        )
+		        ) {
+			        updateState();
+		        }
+	        });
+        }
 
 		if (document.readyState === 'loading') {
 			document.addEventListener('DOMContentLoaded', init);
 		} else {
 			init();
 		}
+
 	})();
 	</script>
 	<?php
 }
 add_action( 'customize_controls_enqueue_scripts', 'zeitfresser_customize_controls_dependency_js' );
 
+/**
+ * Small UI polish
+ */
 add_action( 'customize_controls_enqueue_scripts', function() {
-    ?>
-    <style>
-        /* 🔥 Settings Label Bolt */
-        #customize-control-ztfr_auto_optimize label,
-        #customize-control-ztfr_auto_delete label {
-            font-weight: 600;
-            display: block;
-            margin-bottom: 2px;
-            line-height: 1.4;
-        }
-
-        /* 🔥 Warning line under description */
-        #customize-control-ztfr_auto_delete .description::after {
-            content: "⚠ This action cannot be undone.";
-            display: block;
-            margin-top: 6px;
-            color: #b32d2e;
-            font-weight: 500;
-        }
-    </style>
-    <?php
+?>
+<style>
+#customize-control-ztfr_auto_optimize > label,
+#customize-control-ztfr_auto_delete > label {
+	display:flex;
+	align-items:flex-start;
+	gap:6px;
+}
+</style>
+<?php
 });
-
-
