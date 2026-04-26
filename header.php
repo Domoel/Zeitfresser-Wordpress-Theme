@@ -2,13 +2,8 @@
 /**
  * The header for our theme
  *
- * This is the template that displays all of the <head> section and everything up until <div id="content">
- *
- * @link https://developer.wordpress.org/themes/basics/template-files/#template-partials
- *
  * @package zeitfresser
  */
-
 ?>
 <!doctype html>
 <html <?php language_attributes(); ?>>
@@ -22,60 +17,68 @@
 </head>
 
 <body <?php body_class(); ?>>
-    <?php wp_body_open(); ?>
-    <a class="skip-link screen-reader-text" href="#primary"><?php esc_html_e( 'Skip to content', 'zeitfresser' ); ?></a>
+<?php wp_body_open(); ?>
 
+<a class="skip-link screen-reader-text" href="#primary">
+    <?php esc_html_e( 'Skip to content', 'zeitfresser' ); ?>
+</a>
 
-    <header id="masthead" class="site-header">
+<header id="masthead" class="site-header">
 
-        <div class="header-wrapper">
-            <div class="container">
-                <div class="site-header-wrapper">
-                    <div class="site-branding">
+    <div class="header-wrapper">
+        <div class="container">
+            <div class="site-header-wrapper">
 
-                        <?php the_custom_logo(); ?>
+                <div class="site-branding">
 
-                        <div class="site-identity">
+                    <?php the_custom_logo(); ?>
 
-                            <?php if( get_theme_mod( 'show_hide_site_title', zeitfresser_get_default_site_title_show_hide() ) ) { ?>
+                    <div class="site-identity">
+
+                        <?php if ( get_theme_mod( 'show_hide_site_title', true ) ) : ?>
                             <div class="site-title">
-                                <a href="<?php echo esc_url( home_url( '/' ) ); ?>" rel="home"
-                                    class="logo"><?php bloginfo( 'name' ); ?></a>
+                                <a href="<?php echo esc_url( home_url( '/' ) ); ?>" rel="home" class="logo">
+                                    <?php bloginfo( 'name' ); ?>
+                                </a>
                             </div>
-                            <?php } ?>
+                        <?php endif; ?>
 
+                        <?php if ( get_theme_mod( 'show_hide_site_tagline', true ) ) : ?>
+                            <div class="site-description">
+                                <?php bloginfo( 'description' ); ?>
+                            </div>
+                        <?php endif; ?>
 
-                            <?php $daisy_blog_description = get_bloginfo( 'description' ); ?>
-                            <?php if( get_theme_mod( 'show_hide_site_tagline', zeitfresser_get_default_site_tagline_show_hide() ) ) { ?>
-                            <div class="site-description"><?php echo $daisy_blog_description; ?></div>
-                            <?php } ?>
-                        </div>
-
-                    </div><!-- .site-branding -->
-
-                    <div class="nav-social-links">
-                        <nav id="site-navigation" class="main-navigation">
-                            <button id="nav-icon3" class="menu-toggle" aria-controls="primary-menu"
-                                aria-expanded="false">
-
-                                <span></span>
-                                <span></span>
-                                <span></span>
-                                <span></span>
-                            </button>
-                            <?php
-                    wp_nav_menu(
-                        array(
-                            'theme_location' => 'menu-1',
-                            'menu_id'        => 'primary-menu',
-                        )
-                    );
-                    ?>
-                        </nav><!-- #site-navigation -->
-
-                        <?php get_template_part( 'template-parts/social', 'links' ); ?>
                     </div>
+
+                </div><!-- .site-branding -->
+
+                <div class="nav-social-links">
+
+                    <nav id="site-navigation" class="main-navigation">
+                        <button id="nav-icon3" class="menu-toggle" aria-controls="primary-menu" aria-expanded="false">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </button>
+
+                        <?php
+                        wp_nav_menu(
+                            array(
+                                'theme_location' => 'menu-1',
+                                'menu_id'        => 'primary-menu',
+                            )
+                        );
+                        ?>
+                    </nav>
+
+                    <?php get_template_part( 'template-parts/social', 'links' ); ?>
+
                 </div>
+
             </div>
         </div>
-    </header><!-- #masthead -->
+    </div>
+
+</header><!-- #masthead -->

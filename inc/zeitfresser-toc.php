@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return bool
  */
 function zeitfresser_show_article_toc() {
-	return (bool) get_theme_mod( 'show_article_toc', zeitfresser_get_default_show_article_toc() );
+	return (bool) get_theme_mod( 'show_article_toc', true );
 }
 
 /**
@@ -24,10 +24,9 @@ function zeitfresser_show_article_toc() {
  * @return int
  */
 function zeitfresser_get_article_toc_min_headlines() {
-	$threshold = absint( get_theme_mod( 'article_toc_min_headlines', zeitfresser_get_default_article_toc_min_headlines() ) );
+	$threshold = absint( get_theme_mod( 'article_toc_min_headlines', 3 ) );
 	return max( 1, $threshold );
 }
-
 
 /**
  * Build a processed single post content payload with TOC metadata.
@@ -36,8 +35,8 @@ function zeitfresser_get_article_toc_min_headlines() {
  * @return array{content:string,items:array<int,array<string,mixed>>}
  */
 function zeitfresser_build_toc_payload( $post_id ) {
-	static $cache = array();
 
+	static $cache = array();
 	$post_id = (int) $post_id;
 
 	if ( isset( $cache[ $post_id ] ) ) {
@@ -49,21 +48,15 @@ function zeitfresser_build_toc_payload( $post_id ) {
 		'items'   => array(),
 	);
 
+	// Early exit conditions
 	if ( ! $post_id || ! is_singular( 'post' ) || ! zeitfresser_show_article_toc() ) {
-		$cache[ $post_id ] = $payload;
-		return $payload;
+		return $cache[ $post_id ] = $payload;
 	}
 
 	$content = trim( (string) $payload['content'] );
 
-	if ( '' === $content ) {
-		$cache[ $post_id ] = $payload;
-		return $payload;
-	}
-
-	if ( ! class_exists( 'DOMDocument' ) ) {
-		$cache[ $post_id ] = $payload;
-		return $payload;
+	if ( '' === $content || ! class_exists( 'DOMDocument' ) ) {
+		return $cache[ $post_id ] = $payload;
 	}
 
 	libxml_use_internal_errors( true );
@@ -76,16 +69,14 @@ function zeitfresser_build_toc_payload( $post_id ) {
 
 	if ( ! $loaded ) {
 		libxml_clear_errors();
-		$cache[ $post_id ] = $payload;
-		return $payload;
+		return $cache[ $post_id ] = $payload;
 	}
 
 	$container = $dom->getElementById( 'zeitfresser-toc-root' );
 
 	if ( ! $container ) {
 		libxml_clear_errors();
-		$cache[ $post_id ] = $payload;
-		return $payload;
+		return $cache[ $post_id ] = $payload;
 	}
 
 	$index     = 1;
@@ -95,8 +86,8 @@ function zeitfresser_build_toc_payload( $post_id ) {
 
 	if ( $headings instanceof DOMNodeList ) {
 		foreach ( $headings as $heading ) {
-			$text = trim( wp_strip_all_tags( $heading->textContent ) );
 
+			$text = trim( wp_strip_all_tags( $heading->textContent ) );
 			if ( '' === $text ) {
 				continue;
 			}
@@ -128,20 +119,18 @@ function zeitfresser_build_toc_payload( $post_id ) {
 
 	libxml_clear_errors();
 
+	// Respect minimum threshold
 	if ( count( $toc_items ) < zeitfresser_get_article_toc_min_headlines() ) {
-		$cache[ $post_id ] = array(
+		return $cache[ $post_id ] = array(
 			'content' => zeitfresser_extract_toc_inner_html( $container ),
 			'items'   => array(),
 		);
-		return $cache[ $post_id ];
 	}
 
-	$cache[ $post_id ] = array(
+	return $cache[ $post_id ] = array(
 		'content' => zeitfresser_extract_toc_inner_html( $container ),
 		'items'   => $toc_items,
 	);
-
-	return $cache[ $post_id ];
 }
 
 /**
@@ -151,6 +140,7 @@ function zeitfresser_build_toc_payload( $post_id ) {
  * @return string
  */
 function zeitfresser_extract_toc_inner_html( $node ) {
+
 	$html = '';
 
 	if ( ! $node || ! $node->hasChildNodes() ) {
@@ -171,6 +161,7 @@ function zeitfresser_extract_toc_inner_html( $node ) {
  * @return bool
  */
 function zeitfresser_has_floating_toc( $post_id = null ) {
+
 	$post_id = $post_id ? (int) $post_id : get_the_ID();
 
 	if ( ! $post_id ) {
@@ -189,6 +180,7 @@ function zeitfresser_has_floating_toc( $post_id = null ) {
  * @return void
  */
 function zeitfresser_render_floating_toc( $post_id = null ) {
+
 	$post_id = $post_id ? (int) $post_id : get_the_ID();
 
 	if ( ! $post_id ) {
@@ -201,13 +193,16 @@ function zeitfresser_render_floating_toc( $post_id = null ) {
 		return;
 	}
 	?>
+
 	<aside class="zeitfresser-floating-toc" id="zeitfresser-floating-toc" aria-label="<?php echo esc_attr__( 'Table of contents', 'zeitfresser' ); ?>">
 		<div class="zeitfresser-floating-toc__header">
 			<span class="zeitfresser-floating-toc__title"><?php echo esc_html__( 'Content', 'zeitfresser' ); ?></span>
-</div>
+		</div>
+
 		<div class="zeitfresser-floating-toc__progress" aria-hidden="true">
 			<span class="zeitfresser-floating-toc__progress-bar" id="zeitfresser-floating-toc-progress"></span>
 		</div>
+
 		<nav class="zeitfresser-floating-toc__nav">
 			<ol class="zeitfresser-floating-toc__list">
 				<?php foreach ( $payload['items'] as $item ) : ?>
@@ -220,5 +215,6 @@ function zeitfresser_render_floating_toc( $post_id = null ) {
 			</ol>
 		</nav>
 	</aside>
+
 	<?php
 }

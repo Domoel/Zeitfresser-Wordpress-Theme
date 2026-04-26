@@ -3,13 +3,6 @@ $page_template = get_page_template_slug( get_queried_object_id() );
 $post_count = 3;
 ?>
 
-<?php
-    $readmore_show_hide = get_theme_mod( 'post_snippet_hide_show_readmore', zeitfresser_get_default_post_snippet_show_hide_read_more() );
-    $readmore_text = get_theme_mod( 'post_snippet_readmore_text', zeitfresser_get_default_post_snippet_read_more_text() );
-
-    $related_articles_title = get_theme_mod( 'post_detail_related_articles_title', zeitfresser_get_default_post_detail_related_articles_title() );
-?>
-
 <div class="related-posts">
     <?php
     $args = array(
@@ -23,53 +16,44 @@ $post_count = 3;
         'update_post_term_cache' => false,
     );
 
-    
     $query = new WP_Query( $args ); 
-    if( $query->have_posts() ) {
-        ?>
-    <h2 class="main-title"><?php echo esc_html( $related_articles_title ); ?></h2>
-    <div class="post-holder">
-        <?php while ( $query->have_posts() ) : $query->the_post(); ?>
-        <div class="news-snippet">
 
-            <?php if( get_theme_mod( 'post_snippet_hide_show_featured_image', zeitfresser_get_default_post_snippet_featured_image() ) && has_post_thumbnail() ) : ?>
+    if ( $query->have_posts() ) :
+    ?>
+        <h2 class="main-title">Related Posts</h2>
 
-            <?php $thumbnail_size = get_theme_mod( 'post_snippet_featured_image_size', zeitfresser_get_default_post_snippet_featured_image_size() ); ?>
-            <a href="<?php echo esc_url( get_permalink() ); ?>" rel="bookmark" class="featured-image">
-                <?php the_post_thumbnail( $thumbnail_size ); ?>
-            </a>
+        <div class="post-holder">
+            <?php while ( $query->have_posts() ) : $query->the_post(); ?>
+                <div class="news-snippet">
 
-            <?php endif; ?>
+                    <?php if ( zeitfresser_show_post_card_featured_image() && has_post_thumbnail() ) : ?>
+                        <a href="<?php echo esc_url( get_permalink() ); ?>" rel="bookmark" class="featured-image">
+                            <?php the_post_thumbnail( zeitfresser_get_post_card_thumbnail_size() ); ?>
+                        </a>
+                    <?php endif; ?>
 
-            <div class="summary">
-                <h5 class="news-title">
-                    <a href="<?php echo esc_url( get_permalink() ); ?>" rel="bookmark">
-                        <?php the_title(); ?>
-                    </a>
-                </h5>
+                    <div class="summary">
 
-                <div class="excerpt">
-                    <?php $excerpt_length = get_theme_mod( 'post_snippet_excerpt_size', zeitfresser_get_default_post_snippet_excerpt_size() ); ?>
+                        <h5 class="news-title">
+                            <a href="<?php echo esc_url( get_permalink() ); ?>" rel="bookmark">
+                                <?php the_title(); ?>
+                            </a>
+                        </h5>
 
-                    <?php echo wp_trim_words( get_the_excerpt(), $excerpt_length ); ?>
-                </div>
+                        <div class="excerpt">
+                            <?php echo esc_html(
+                                wp_trim_words(
+                                    get_the_excerpt(),
+                                    zeitfresser_get_post_card_excerpt_length()
+                                )
+                            ); ?>
+                        </div>
 
-                <?php if( $readmore_show_hide ) { ?>
-                <div class="ifoot info">
-                    <a href="<?php echo esc_url( get_permalink() ); ?>" rel="bookmark" title=""
-                        class="readmore"><?php echo esc_html( $readmore_text ); ?> </a>
-                    <?php if( get_theme_mod( 'post_snippet_hide_show_social_share', zeitfresser_get_default_post_snippet_social_share() ) ) { ?>
-                    <div class="social-share">
-                        <?php get_template_part( 'inc/blocks/includes/template', 'social-share' ); ?>
                     </div>
-                    <?php } ?>
                 </div>
-                <?php } ?>
-
-            </div>
+            <?php endwhile; ?>
+            <?php wp_reset_postdata(); ?>
         </div>
-        <?php endwhile; ?>
-        <?php wp_reset_postdata(); ?>
-    </div>
-    <?php } ?>
+
+    <?php endif; ?>
 </div>
