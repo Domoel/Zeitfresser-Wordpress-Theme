@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var stickyTop = 100;
     var headingOffset = 88;
     var ticking = false;
-
+    var cachedSidebar = null;
     var tocBottomOffset = null;
 
     function isDesktop() {
@@ -55,23 +55,22 @@ document.addEventListener('DOMContentLoaded', function () {
         tocBottomOffset = parseInt(value, 10) || 12;
         return tocBottomOffset;
     }
-
-    let cachedSidebar = null;
-
+    
     function getRealSidebar() {
         if (cachedSidebar) return cachedSidebar;
 
-        var candidates = Array.from(document.querySelectorAll('aside, .sidebar, #secondary'));
-
-        if (!candidates.length) return null;
+        var candidates = Array.prototype.slice.call(
+            document.querySelectorAll('aside, .sidebar, #secondary')
+        );
 
         cachedSidebar = candidates
-            .map(el => ({
-                el,
-                rect: el.getBoundingClientRect()
-            }))
-            .filter(item => item.rect.width > 200 && item.rect.height > 200)
-            .sort((a, b) => b.rect.left - a.rect.left)[0]?.el || null;
+            .filter(function (el) {
+                var rect = el.getBoundingClientRect();
+                return rect.width > 200 && rect.height > 200;
+            })
+            .sort(function (a, b) {
+                return b.getBoundingClientRect().left - a.getBoundingClientRect().left;
+            })[0] || null;
 
         return cachedSidebar;
     }
@@ -87,36 +86,35 @@ document.addEventListener('DOMContentLoaded', function () {
         var scrollTop = window.scrollY || window.pageYOffset || 0;
         var titleRect = title.getBoundingClientRect();
 
+        // 🔥 bessere Content-Erkennung
         var contentColumn =
             document.querySelector('.inside-page .main-wrapper > section') ||
             document.querySelector('#primary') ||
             document.querySelector('.content-area') ||
             title;
 
+        if (!contentColumn) return;
+
         var sidebar = getRealSidebar();
 
-        if (!contentColumn || !sidebar) return;
-
         var contentRect = contentColumn.getBoundingClientRect();
-        var sidebarRect = sidebar.getBoundingClientRect();
+        var sidebarRect = sidebar ? sidebar.getBoundingClientRect() : null;
 
-        // --- stable gap ---
-        var gap = sidebarRect.left - contentRect.right;
+        var gap = 48;
 
-        if (gap < 0) {
-            gap = 48;
+        if (sidebarRect) {
+            gap = Math.abs(sidebarRect.left - contentRect.right);
+            gap = Math.max(32, Math.min(gap, 120));
         }
 
-        gap = Math.max(32, Math.min(gap, 120));
+        // Toc Content Breite
+        var maxWidth = Math.max(Math.round(contentRect.left - gap - 24), 180);
+        var tocWidth = Math.max(220, Math.min(260, maxWidth));
 
-        var tocWidth = 220;
-
-        // --- final position ---
-        var tocLeft = Math.round(
-            contentRect.left - gap - tocWidth
+        var tocLeft = Math.max(
+            24,
+            Math.round(contentRect.left - gap - tocWidth)
         );
-
-        tocLeft = Math.max(24, tocLeft);
 
         var tocTop = Math.max(
             stickyTop,
