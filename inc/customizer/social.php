@@ -6,11 +6,6 @@
  */
 
 if ( ! function_exists( 'zeitfresser_get_social_links' ) ) {
-    /**
-     * Return supported social networks.
-     *
-     * @return array<string,string>
-     */
     function zeitfresser_get_social_links() {
         return array(
             'facebook'  => esc_html__( 'Facebook', 'zeitfresser' ),
@@ -31,31 +26,52 @@ add_action( 'customize_register', 'zeitfresser_social_links' );
 
 function zeitfresser_social_links( $wp_customize ) {
 
-    $social_links = zeitfresser_get_social_links();
+    /**
+     * 🔥 Heading Control (falls noch nicht vorhanden)
+     */
+    if ( class_exists( 'WP_Customize_Control' ) && ! class_exists( 'ZTFR_Customize_Heading_Control' ) ) {
+        class ZTFR_Customize_Heading_Control extends WP_Customize_Control {
+            public $type = 'ztfr-heading';
+
+            public function render_content() {
+                ?>
+                <span style="display:block; font-weight:600; font-size:14px; margin:15px 0 5px;">
+                    <?php echo esc_html( $this->label ); ?>
+                </span>
+                <?php
+            }
+        }
+    }
 
     /**
-     * Section Divider
+     * ------------------------
+     * SOCIAL HEADING
+     * ------------------------
      */
     $wp_customize->add_setting(
         'ztfr_social_heading',
         array(
-            'sanitize_callback' => 'wp_kses_post',
+            'sanitize_callback' => 'sanitize_text_field',
         )
     );
 
     $wp_customize->add_control(
-        'ztfr_social_heading',
-        array(
-            'section'     => 'ztfr_general',
-            'type'        => 'hidden',
-            'description' => '<hr><strong>' . esc_html__( 'Social Links', 'zeitfresser' ) . '</strong>',
-            'priority'    => 30,
+        new ZTFR_Customize_Heading_Control(
+            $wp_customize,
+            'ztfr_social_heading',
+            array(
+                'label'    => esc_html__( 'Social Links', 'zeitfresser' ),
+                'section'  => 'ztfr_general',
+                'priority' => 30,
+            )
         )
     );
 
     /**
      * Social URLs
      */
+    $social_links = zeitfresser_get_social_links();
+
     $priority = 31;
 
     foreach ( $social_links as $key => $label ) {

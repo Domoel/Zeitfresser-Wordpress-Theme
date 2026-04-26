@@ -27,7 +27,7 @@ function zeitfresser_layout_options( $wp_customize ) {
             'section'     => 'ztfr_general',
             'label'       => esc_html__( 'Container Width', 'zeitfresser' ),
             'description' => esc_html__( 'Maximum width of the content container in pixels.', 'zeitfresser' ),
-            'priority'    => 10,
+            'priority'    => 22,
             'input_attrs' => array(
                 'min'  => 800,
                 'max'  => 2000,
@@ -47,7 +47,7 @@ function zeitfresser_container_width_dynamic_css() {
     $container_width = (int) get_theme_mod( 'container_width' );
 
     if ( $container_width <= 0 ) {
-        $container_width = 1140;
+        $container_width = 1400;
     }
 
     echo '<style>:root{--container-width:' . esc_attr( $container_width ) . 'px;}</style>';

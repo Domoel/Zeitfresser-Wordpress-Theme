@@ -10,27 +10,48 @@ add_action( 'customize_register', 'zeitfresser_toc_options' );
 function zeitfresser_toc_options( $wp_customize ) {
 
     /**
-     * Section Divider (UI only)
+     * 🔥 Heading Control (falls noch nicht vorhanden)
+     */
+    if ( class_exists( 'WP_Customize_Control' ) && ! class_exists( 'ZTFR_Customize_Heading_Control' ) ) {
+        class ZTFR_Customize_Heading_Control extends WP_Customize_Control {
+            public $type = 'ztfr-heading';
+
+            public function render_content() {
+                ?>
+                <span style="display:block; font-weight:600; font-size:14px; margin:15px 0 5px;">
+                    <?php echo esc_html( $this->label ); ?>
+                </span>
+                <?php
+            }
+        }
+    }
+
+    /**
+     * ------------------------
+     * TOC HEADING
+     * ------------------------
      */
     $wp_customize->add_setting(
         'ztfr_toc_heading',
         array(
-            'sanitize_callback' => 'wp_kses_post',
+            'sanitize_callback' => 'sanitize_text_field',
         )
     );
 
     $wp_customize->add_control(
-        'ztfr_toc_heading',
-        array(
-            'section'     => 'ztfr_general',
-            'type'        => 'hidden',
-            'description' => '<hr><strong>' . esc_html__( 'Article TOC', 'zeitfresser' ) . '</strong>',
-            'priority'    => 20,
+        new ZTFR_Customize_Heading_Control(
+            $wp_customize,
+            'ztfr_toc_heading',
+            array(
+                'label'    => esc_html__( 'TOC', 'zeitfresser' ),
+                'section'  => 'ztfr_general',
+                'priority' => 10,
+            )
         )
     );
 
     /**
-     * Toggle TOC
+     * Show TOC
      */
     $wp_customize->add_setting(
         'show_article_toc',
@@ -47,7 +68,7 @@ function zeitfresser_toc_options( $wp_customize ) {
             'section'     => 'ztfr_general',
             'label'       => esc_html__( 'Show Article TOC', 'zeitfresser' ),
             'description' => esc_html__( 'Enable floating TOC on single posts.', 'zeitfresser' ),
-            'priority'    => 21,
+            'priority'    => 11,
         )
     );
 
@@ -67,9 +88,9 @@ function zeitfresser_toc_options( $wp_customize ) {
         array(
             'type'        => 'number',
             'section'     => 'ztfr_general',
-            'label'       => esc_html__( 'Minimum Headlines for TOC', 'zeitfresser' ),
+            'label'       => esc_html__( 'Minimum Headlines', 'zeitfresser' ),
             'description' => esc_html__( 'TOC appears only if this number of headings is reached.', 'zeitfresser' ),
-            'priority'    => 22,
+            'priority'    => 12,
             'input_attrs' => array(
                 'min'  => 1,
                 'max'  => 50,

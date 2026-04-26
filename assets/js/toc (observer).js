@@ -1,41 +1,22 @@
 /**
- * Floating TOC (Scroll-Driven Implementation)
+ * Floating TOC (IntersectionObserver Version)
  *
- * This implementation uses a scroll-based approach combined with
- * requestAnimationFrame to determine the currently active heading.
- * The active section is calculated based on a fixed viewport trigger
- * (offset from the top), ensuring predictable and stable behavior.
+ * This implementation relies on the IntersectionObserver API to detect which
+ * headings are currently visible in the viewport. It is event-driven and
+ * more efficient, as updates occur only when visibility changes.
  *
- * Design Goals:
- * - Deterministic highlighting (no competing states)
- * - Visual stability (no flickering or race conditions)
- * - Theme compatibility (no reliance on experimental APIs)
- * - Maintainable and debuggable logic
+ * Pros:
+ * - Lower CPU usage (no continuous polling)
+ * - Native browser optimization
  *
- * Characteristics:
- * - Uses a cached list of headings for efficient iteration
- * - Throttles scroll handling via requestAnimationFrame
- * - Minimizes DOM writes and layout recalculations
- * - Separates layout (positioning) from state (active link)
- *
- * Trade-offs:
- * - Runs continuously during scroll (minor CPU overhead)
- * - Relies on getBoundingClientRect for visibility detection
- * - Less "event-driven" than IntersectionObserver-based approaches
- *
- * Notes:
- * This approach was chosen over IntersectionObserver to guarantee
- * consistent ordering, eliminate flickering edge cases, and provide
- * fully deterministic behavior across all layouts and browsers.
+ * Cons:
+ * - Can produce multiple competing active states
+ * - May require tuning to avoid flickering or reordering
  */
 
 document.addEventListener('DOMContentLoaded', function () {
     var toc = document.getElementById('zeitfresser-floating-toc');
-    var title = document.querySelector(
-        '.zeitfresser-article-heading .page-title, ' +
-        '.zeitfresser-article-heading .entry-title, ' +
-        '.entry-header .entry-title'
-    );
+    var title = document.querySelector('.zeitfresser-article-heading .page-title, .zeitfresser-article-heading .entry-title, .entry-header .entry-title');
     var progressBar = document.getElementById('zeitfresser-floating-toc-progress');
     var nav = toc ? toc.querySelector('.zeitfresser-floating-toc__nav') : null;
 
@@ -48,9 +29,8 @@ document.addEventListener('DOMContentLoaded', function () {
     var stickyTop = 100;
     var headingOffset = 88;
     var ticking = false;
-    var tocBottomOffset = null;
     var cachedSidebar = null;
-    var headings = getHeadings();
+    var tocBottomOffset = null;
 
     function isDesktop() {
         return desktopQuery.matches;
@@ -62,13 +42,14 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function getHeadings() {
-        return links
-            .map(function (link) {
-                return { link: link, target: getTarget(link) };
-            })
-            .filter(function (item) {
-                return !!item.target;
-            });
+        return links.map(function (link) {
+            return {
+                link: link,
+                target: getTarget(link)
+            };
+        }).filter(function (item) {
+            return !!item.target;
+        });
     }
 
     function getArticleElement() {
@@ -90,7 +71,7 @@ document.addEventListener('DOMContentLoaded', function () {
         tocBottomOffset = parseInt(value, 10) || 12;
         return tocBottomOffset;
     }
-
+    
     function getRealSidebar() {
         if (cachedSidebar) return cachedSidebar;
 
@@ -104,9 +85,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 return rect.width > 200 && rect.height > 200;
             })
             .sort(function (a, b) {
-                var rectA = a.getBoundingClientRect();
-                var rectB = b.getBoundingClientRect();
-                return rectB.left - rectA.left;
+                return b.getBoundingClientRect().left - a.getBoundingClientRect().left;
             })[0] || null;
 
         return cachedSidebar;
@@ -133,6 +112,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!contentColumn) return;
 
         var sidebar = getRealSidebar();
+
         var contentRect = contentColumn.getBoundingClientRect();
         var sidebarRect = sidebar ? sidebar.getBoundingClientRect() : null;
 
@@ -143,9 +123,10 @@ document.addEventListener('DOMContentLoaded', function () {
             gap = Math.max(32, Math.min(gap, 120));
         }
 
+        // Toc Content Breite
         var maxWidth = Math.max(Math.round(contentRect.left - gap - 24), 180);
         var tocWidth = Math.max(220, Math.min(260, maxWidth));
-        
+
         var tocLeft = Math.max(
             24,
             Math.round(contentRect.left - gap - tocWidth)
@@ -168,6 +149,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         var article = getArticleElement();
+
         if (!article) {
             toc.style.transform = '';
             return;
@@ -176,6 +158,7 @@ document.addEventListener('DOMContentLoaded', function () {
         toc.style.transform = '';
 
         var scrollTop = window.scrollY || window.pageYOffset;
+
         var articleRect = article.getBoundingClientRect();
         var articleBottom = articleRect.top + scrollTop + articleRect.height;
 
@@ -185,6 +168,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var tocBottom = tocTop + tocHeight;
 
         var offset = getTocBottomOffset();
+
         var maxBottom = articleBottom - offset;
         var overflow = Math.ceil(tocBottom - maxBottom);
 
@@ -210,6 +194,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!progressBar) return;
 
         var article = getArticleElement();
+
         if (!article) {
             progressBar.style.width = '0%';
             return;
@@ -217,32 +202,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
         var rect = article.getBoundingClientRect();
         var total = Math.max(article.offsetHeight - window.innerHeight, 1);
-
-        var progress = Math.min(
-            Math.max((-rect.top / total) * 100, 0),
-            100
-        );
+        var progress = Math.min(Math.max((-rect.top / total) * 100, 0), 100);
 
         progressBar.style.width = progress + '%';
-    }
-
-    function updateActiveHeading() {
-        if (!headings.length) return;
-
-        var currentId = headings[0].target.id;
-        var triggerY = headingOffset + 24;
-
-        for (var i = 0; i < headings.length; i++) {
-            var rectTop = headings[i].target.getBoundingClientRect().top;
-
-            if (rectTop <= triggerY) {
-                currentId = headings[i].target.id;
-            } else {
-                break;
-            }
-        }
-
-        setActiveLink(currentId);
     }
 
     function onViewportChange() {
@@ -254,8 +216,40 @@ document.addEventListener('DOMContentLoaded', function () {
             syncPosition();
             handleFooterCollision();
             updateProgress();
-            updateActiveHeading();
             ticking = false;
+        });
+    }
+    
+    // 🔥 NEW: IntersectionObserver for active headings
+    let currentActiveId = null;
+
+    function initIntersectionObserver() {
+        const headings = getHeadings();
+        if (!headings.length) return;
+
+        const observer = new IntersectionObserver(function (entries) {
+
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                    const id = entry.target.id;
+
+                    if (id !== currentActiveId) {
+                        currentActiveId = id;
+                        setActiveLink(id);
+                    }
+                }
+            });
+
+        }, {
+            root: null,
+            rootMargin: `-${headingOffset}px 0px -70% 0px`,
+            threshold: 0
+        });
+
+        headings.forEach(function (item) {
+            if (item.target) {
+                observer.observe(item.target);
+            }
         });
     }
 
@@ -266,48 +260,35 @@ document.addEventListener('DOMContentLoaded', function () {
 
             event.preventDefault();
 
-            var top =
-                target.getBoundingClientRect().top +
-                window.scrollY -
-                headingOffset;
+            var top = target.getBoundingClientRect().top + window.scrollY - headingOffset;
 
             window.scrollTo({
                 top: top,
                 behavior: 'smooth'
             });
-
-            setActiveLink(target.id);
         });
     });
 
     if (nav) {
-        nav.addEventListener(
-            'wheel',
-            function (event) {
-                var canScroll = nav.scrollHeight > nav.clientHeight;
-                if (!canScroll) return;
+        nav.addEventListener('wheel', function (event) {
+            var canScroll = nav.scrollHeight > nav.clientHeight;
+            if (!canScroll) return;
 
-                var atTop = nav.scrollTop <= 0;
-                var atBottom =
-                    Math.ceil(nav.scrollTop + nav.clientHeight) >= nav.scrollHeight;
+            var atTop = nav.scrollTop <= 0;
+            var atBottom = Math.ceil(nav.scrollTop + nav.clientHeight) >= nav.scrollHeight;
 
-                if (
-                    (event.deltaY < 0 && !atTop) ||
-                    (event.deltaY > 0 && !atBottom)
-                ) {
-                    event.preventDefault();
-                    nav.scrollTop += event.deltaY;
-                }
-            },
-            { passive: false }
-        );
+            if ((event.deltaY < 0 && !atTop) || (event.deltaY > 0 && !atBottom)) {
+                event.preventDefault();
+                nav.scrollTop += event.deltaY;
+            }
+        }, { passive: false });
     }
 
     // Initial run
     syncPosition();
     handleFooterCollision();
     updateProgress();
-    updateActiveHeading();
+    initIntersectionObserver();
 
     requestAnimationFrame(function () {
         toc.classList.add('is-visible');
@@ -315,8 +296,4 @@ document.addEventListener('DOMContentLoaded', function () {
 
     window.addEventListener('scroll', onViewportChange, { passive: true });
     window.addEventListener('resize', onViewportChange, { passive: true });
-    window.addEventListener('load', function () {
-        syncPosition();
-    });
-    
 });
