@@ -1,8 +1,6 @@
 document.addEventListener('DOMContentLoaded', function () {
     var toc = document.getElementById('zeitfresser-floating-toc');
-    var title = document.querySelector(
-        '.entry-header .entry-title, .page-title, h1'
-    );
+    var title = document.querySelector('.zeitfresser-article-heading .page-title, .zeitfresser-article-heading .entry-title, .entry-header .entry-title');
     var progressBar = document.getElementById('zeitfresser-floating-toc-progress');
     var nav = toc ? toc.querySelector('.zeitfresser-floating-toc__nav') : null;
 
@@ -58,6 +56,26 @@ document.addEventListener('DOMContentLoaded', function () {
         return tocBottomOffset;
     }
 
+    let cachedSidebar = null;
+
+    function getRealSidebar() {
+        if (cachedSidebar) return cachedSidebar;
+
+        var candidates = Array.from(document.querySelectorAll('aside, .sidebar, #secondary'));
+
+        if (!candidates.length) return null;
+
+        cachedSidebar = candidates
+            .map(el => ({
+                el,
+                rect: el.getBoundingClientRect()
+            }))
+            .filter(item => item.rect.width > 200 && item.rect.height > 200)
+            .sort((a, b) => b.rect.left - a.rect.left)[0]?.el || null;
+
+        return cachedSidebar;
+    }
+
     function syncPosition() {
         if (!isDesktop()) {
             document.documentElement.style.setProperty('--zeitfresser-toc-top', stickyTop + 'px');
@@ -66,35 +84,44 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        var titleRect = title.getBoundingClientRect();
         var scrollTop = window.scrollY || window.pageYOffset || 0;
+        var titleRect = title.getBoundingClientRect();
 
         var contentColumn =
-            document.querySelector('.inside-page .container') ||
+            document.querySelector('.inside-page .main-wrapper > section') ||
             document.querySelector('#primary') ||
             document.querySelector('.content-area') ||
             title;
 
-        var sidebar = document.querySelector(
-            '.inside-page .main-wrapper > aside, ' +
-            '.inside-page .main-wrapper .widget-area, ' +
-            '.inside-page .main-wrapper #secondary, ' +
-            '.inside-page .main-wrapper .sidebar'
-        );
+        var sidebar = getRealSidebar();
 
-        var contentRect = contentColumn ? contentColumn.getBoundingClientRect() : titleRect;
-        var sidebarRect = sidebar ? sidebar.getBoundingClientRect() : null;
+        if (!contentColumn || !sidebar) return;
 
-        var mirroredGap = 56;
+        var contentRect = contentColumn.getBoundingClientRect();
+        var sidebarRect = sidebar.getBoundingClientRect();
 
-        if (sidebarRect) {
-            mirroredGap = Math.max(Math.round(sidebarRect.left - contentRect.right), 40);
+        // --- stable gap ---
+        var gap = sidebarRect.left - contentRect.right;
+
+        if (gap < 0) {
+            gap = 48;
         }
 
-        var maxWidth = Math.max(Math.round(contentRect.left - mirroredGap - 24), 180);
-        var tocWidth = Math.max(190, Math.min(250, maxWidth));
-        var tocLeft = Math.max(24, Math.round(contentRect.left - mirroredGap - tocWidth));
-        var tocTop = Math.max(stickyTop, Math.round(titleRect.top + scrollTop + 14));
+        gap = Math.max(32, Math.min(gap, 120));
+
+        var tocWidth = 220;
+
+        // --- final position ---
+        var tocLeft = Math.round(
+            contentRect.left - gap - tocWidth
+        );
+
+        tocLeft = Math.max(24, tocLeft);
+
+        var tocTop = Math.max(
+            stickyTop,
+            Math.round(titleRect.top + scrollTop + 14)
+        );
 
         document.documentElement.style.setProperty('--zeitfresser-toc-top', tocTop + 'px');
         document.documentElement.style.setProperty('--zeitfresser-toc-left', tocLeft + 'px');
