@@ -196,54 +196,57 @@ add_action( 'widgets_init', 'zeitfresser_widgets_init' );
  * Assets
  * ------------------------------------------------------------------------
  */
-function zeitfresser_asset_version( $relative_path ) {
-    $path = get_template_directory() . $relative_path;
-    return file_exists( $path ) ? (string) filemtime( $path ) : ZEITFRESSER_VERSION;
-}
-
 function zeitfresser_scripts() {
 
-    // Base stylesheet
+    // Base stylesheet (theme root)
     wp_enqueue_style(
         'zeitfresser',
         get_template_directory_uri() . '/style.css',
-        array(),
-        zeitfresser_asset_version( '/style.css' )
+        [],
+        file_exists( get_template_directory() . '/style.css' )
+            ? filemtime( get_template_directory() . '/style.css' )
+            : ZEITFRESSER_VERSION
     );
 
-    // Fonts
+    // Styles
+    $fonts  = zeitfresser_asset_versioned('/css/fonts.css');
+    $colors = zeitfresser_asset_versioned('/css/colors.css');
+
     wp_enqueue_style(
         'zeitfresser-fonts',
-        get_template_directory_uri() . '/css/fonts.css',
-        array(),
-        zeitfresser_asset_version( '/css/fonts.css' )
+        $fonts['url'],
+        [],
+        $fonts['version']
     );
 
-    // Colors
     wp_enqueue_style(
         'zeitfresser-colors',
-        get_template_directory_uri() . '/css/colors.css',
-        array( 'zeitfresser' ),
-        zeitfresser_asset_version( '/css/colors.css' )
+        $colors['url'],
+        ['zeitfresser'],
+        $colors['version']
     );
 
     // Scripts
+    $nav     = zeitfresser_asset_versioned('/js/navigation.js');
+    $scripts = zeitfresser_asset_versioned('/js/scripts.js');
+
     wp_enqueue_script(
         'zeitfresser-navigation',
-        get_template_directory_uri() . '/js/navigation.js',
-        array(),
-        zeitfresser_asset_version( '/js/navigation.js' ),
+        $nav['url'],
+        [],
+        $nav['version'],
         true
     );
 
     wp_enqueue_script(
         'zeitfresser-scripts',
-        get_template_directory_uri() . '/js/scripts.js',
-        array(),
-        zeitfresser_asset_version( '/js/scripts.js' ),
+        $scripts['url'],
+        [],
+        $scripts['version'],
         true
     );
 
+    // WordPress native threaded comments
     if ( is_singular() && comments_open() && get_option( 'thread_comments' ) ) {
         wp_enqueue_script( 'comment-reply' );
     }
@@ -401,10 +404,10 @@ add_filter( 'wp_get_attachment_image_attributes', 'zeitfresser_improve_attachmen
 function zeitfresser_preload_fonts() {
     ?>
     <!-- Critical Fonts Only -->
-    <link rel="preload" href="<?php echo get_template_directory_uri(); ?>/fonts/oswald-400.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="<?php echo get_template_directory_uri(); ?>/fonts/oswald-700.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="<?php echo get_template_directory_uri(); ?>/fonts/roboto-400.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="<?php echo get_template_directory_uri(); ?>/fonts/roboto-500.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="<?php echo zeitfresser_asset('/fonts/oswald-400.woff2'); ?>" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="<?php echo zeitfresser_asset('/fonts/oswald-700.woff2'); ?>" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="<?php echo zeitfresser_asset('/fonts/roboto-400.woff2'); ?>" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="<?php echo zeitfresser_asset('/fonts/roboto-500.woff2'); ?>" as="font" type="font/woff2" crossorigin>
     <?php
 }
 add_action('wp_head', 'zeitfresser_preload_fonts', 0);
