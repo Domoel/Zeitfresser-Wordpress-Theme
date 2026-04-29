@@ -59,8 +59,8 @@
    ========================= */
 
 :root {
-  --primary-font: 'Oswald', var(--zeitfresser-heading-fallback);
-  --secondary-font: 'Roboto', var(--zeitfresser-body-fallback);
+  --primary-font: 'Oswald', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --secondary-font: 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
   --site-identity-font-size: 40px;
 
