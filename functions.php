@@ -698,3 +698,11 @@ function zeitfresser_responsive_image_sizes( $sizes, $size ) {
     return $sizes;
 }
 add_filter( 'wp_calculate_image_sizes', 'zeitfresser_responsive_image_sizes', 10, 2 );
+
+/**
+ * Delete Cookie Button
+ */
+ add_filter( 'comment_form_default_fields', function( $fields ) {
+    unset( $fields['cookies'] );
+    return $fields;
+});

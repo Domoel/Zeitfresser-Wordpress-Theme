@@ -1,10 +1,9 @@
 :root {
-  --site-title-color: #f7f7fa;
-  --primary-color: #f7f7fa;
-  --secondary-color: #f7f7fa;
-  --light-color: #1e1f29;
-  --grey-color: #f7f7fa;
-  --dark-color: #f7f7fa;
+  --light-color: #f7f7fa;
+  --dark-color: #1e1f29;
+  --footer-color: #2f313d;
+  --hover-color: #bd93f9;
+  
 }
 
 body {
