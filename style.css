@@ -1590,6 +1590,7 @@ header.page-header h1 {
 .comments a {
   background: none;
   color: inherit;
+  transform: translateY(-1px);
 }
 
 .comments svg {
