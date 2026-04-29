@@ -1939,9 +1939,9 @@ header.page-header h1 {
 }
 
 .zeitfresser-floating-toc__progress-bar {
+  display: block;
   height: 100%;
   width: 0;
-
   background: var(--hover-color);
   transition: width 0.18s ease;
 }

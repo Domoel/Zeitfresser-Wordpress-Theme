@@ -216,7 +216,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         var rect = article.getBoundingClientRect();
-        var total = Math.max(article.offsetHeight - window.innerHeight, 1);
+        var total = Math.max(article.scrollHeight - window.innerHeight, 1);
 
         var progress = Math.min(
             Math.max((-rect.top / total) * 100, 0),
