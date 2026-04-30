@@ -247,6 +247,16 @@ textarea {
   margin: 0;
 }
 
+/* Article Justifiy */
+
+.entry-content p,
+.post-content p {
+    text-align: justify;
+    hyphens: auto;
+    word-break: normal;
+    overflow-wrap: break-word;
+}
+
 /* Header Wrapper */
 
 .header-wrapper {
@@ -1582,7 +1592,6 @@ header.page-header h1 {
   display: flex;
   align-items: center;
   gap: 0.3rem;
-
   font-family: var(--primary-font);
   margin: 0.5rem 0;
 }
@@ -1590,7 +1599,7 @@ header.page-header h1 {
 .comments a {
   background: none;
   color: inherit;
-  transform: translateY(-1px);
+  transform: translateY(-0.5px);
 }
 
 .comments svg {
