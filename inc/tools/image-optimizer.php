@@ -1,6 +1,6 @@
 <?php
 /**
- * Performance tools for existing media.
+ * Image Optimizer
  *
  * @package zeitfresser
  */
@@ -12,16 +12,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Register admin page
  */
-function zeitfresser_register_performance_tools_page() {
+function zeitfresser_register_image_optimizer_page() {
     add_theme_page(
-        'Performance Tools',
-        'Performance Tools',
+        'Image Optimizer',
+        'Image Optimizer',
         'manage_options',
-        'zeitfresser-performance-tools',
-        'zeitfresser_render_performance_tools_page'
+        'zeitfresser-image-optimizer',
+        'zeitfresser_render_image_optimizer_page'
     );
 }
-add_action( 'admin_menu', 'zeitfresser_register_performance_tools_page' );
+add_action( 'admin_menu', 'zeitfresser_register_image_optimizer_page' );
 
 /**
  * Count pending images
@@ -427,7 +427,7 @@ function zeitfresser_ajax_optimize_images() {
         wp_send_json_error();
     }
 
-    check_ajax_referer( 'zeitfresser_performance_tools', 'nonce' );
+    check_ajax_referer( 'zeitfresser_image_optimizer', 'nonce' );
 
     $results = zeitfresser_process_legacy_images_batch( 25 );
 
@@ -465,7 +465,7 @@ function zeitfresser_ajax_delete_originals() {
         wp_send_json_error();
     }
 
-    check_ajax_referer( 'zeitfresser_performance_tools', 'nonce' );
+    check_ajax_referer( 'zeitfresser_image_optimizer', 'nonce' );
 
     $deleted       = zeitfresser_delete_originals_batch( 10 );
     $total         = zeitfresser_get_total_originals_count();
@@ -486,7 +486,7 @@ add_action( 'wp_ajax_zeitfresser_delete_originals', 'zeitfresser_ajax_delete_ori
 /**
  * Render UI
  */
-function zeitfresser_render_performance_tools_page() {
+function zeitfresser_render_image_optimizer_page() {
 
     if ( ! current_user_can( 'manage_options' ) ) {
         return;
@@ -519,7 +519,7 @@ function zeitfresser_render_performance_tools_page() {
 ?>
 
 <div class="wrap">
-    <h1>Zeitfresser Performance Tools</h1>
+    <h1>Zeitfresser Image Optimizer</h1>
     
     <div class="notice notice-info" style="max-width:800px;margin-top:20px;">
         <p>
@@ -532,7 +532,7 @@ function zeitfresser_render_performance_tools_page() {
             • Once optimized, original images can be deleted to save disk space.<br><br>
 
             <strong>Automation:</strong><br>
-            • You can enable automatic optimization on upload in the Customizer under <em>Performance Tools Settings</em>.<br>
+            • You can enable automatic optimization on upload in the Customizer under <em>Image Optimizer Settings</em>.<br>
             • Optionally, original images can also be deleted automatically after successful optimization.<br><br>
 
             <strong>Safety:</strong><br>
@@ -653,7 +653,7 @@ function deleteBatch() {
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: new URLSearchParams({
             action: 'zeitfresser_delete_originals',
-            nonce: '<?php echo wp_create_nonce('zeitfresser_performance_tools'); ?>'
+            nonce: '<?php echo wp_create_nonce('zeitfresser_image_optimizer'); ?>'
         })
     })
     .then(res => res.json())
@@ -732,7 +732,7 @@ function processBatch() {
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: new URLSearchParams({
             action: 'zeitfresser_optimize_images',
-            nonce: '<?php echo wp_create_nonce('zeitfresser_performance_tools'); ?>'
+            nonce: '<?php echo wp_create_nonce('zeitfresser_image_optimizer'); ?>'
         })
     })
     .then(res => res.json())

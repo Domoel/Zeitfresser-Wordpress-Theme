@@ -1,42 +1,24 @@
 <?php
 /**
- * Theme Customizer Core
+ * Image Optimizer (Settings + UI)
  *
  * @package zeitfresser
  */
 
-function zeitfresser_customize_register( $wp_customize ) {
-
-	// Live Preview support
-	$wp_customize->get_setting( 'blogname' )->transport         = 'postMessage';
-	$wp_customize->get_setting( 'blogdescription' )->transport  = 'postMessage';
-	$wp_customize->get_setting( 'header_textcolor' )->transport = 'postMessage';
-
-	if ( isset( $wp_customize->selective_refresh ) ) {
-		$wp_customize->selective_refresh->add_partial(
-			'blogname',
-			array(
-				'selector'        => '.site-title a',
-				'render_callback' => 'zeitfresser_customize_partial_blogname',
-			)
-		);
-
-		$wp_customize->selective_refresh->add_partial(
-			'blogdescription',
-			array(
-				'selector'        => '.site-description',
-				'render_callback' => 'zeitfresser_customize_partial_blogdescription',
-			)
-		);
-	}
+/**
+ * ------------------------------------------------------------------------
+ * Settings
+ * ------------------------------------------------------------------------
+ */
+function zeitfresser_customize_image_optimizer_settings( $wp_customize ) {
 
 	/**
-	 * Performance Tools Section
+	 * Image Optimizer Section
 	 */
 	$wp_customize->add_section(
-		'ztfr_performance_tools',
+		'ztfr_image_optimizer',
 		array(
-			'title'    => 'Performance Tools Settings',
+			'title'    => 'Image Optimizer',
 			'priority' => 160,
 		)
 	);
@@ -56,7 +38,7 @@ function zeitfresser_customize_register( $wp_customize ) {
 		'ztfr_auto_optimize',
 		array(
 			'type'        => 'checkbox',
-			'section'     => 'ztfr_performance_tools',
+			'section'     => 'ztfr_image_optimizer',
 			'label'       => 'Auto Optimize Pictures on Upload',
 			'description' => 'Automatically converts images to AVIF/WebP.',
 		)
@@ -77,43 +59,21 @@ function zeitfresser_customize_register( $wp_customize ) {
 		'ztfr_auto_delete',
 		array(
 			'type'        => 'checkbox',
-			'section'     => 'ztfr_performance_tools',
+			'section'     => 'ztfr_image_optimizer',
 			'label'       => 'Auto Delete Original Pictures',
 			'description' => 'Deletes originals after optimization.',
 		)
 	);
 }
-add_action( 'customize_register', 'zeitfresser_customize_register' );
+add_action( 'customize_register', 'zeitfresser_customize_image_optimizer_settings' );
+
 
 /**
- * Partial refresh helpers
+ * ------------------------------------------------------------------------
+ * UI Logic (JS)
+ * ------------------------------------------------------------------------
  */
-function zeitfresser_customize_partial_blogname() {
-	bloginfo( 'name' );
-}
-
-function zeitfresser_customize_partial_blogdescription() {
-	bloginfo( 'description' );
-}
-
-/**
- * Live preview JS
- */
-function zeitfresser_customize_preview_js() {
-	wp_enqueue_script(
-		'zeitfresser-customizer',
-		get_template_directory_uri() . '/js/customizer.js',
-		array( 'customize-preview' ),
-		ZEITFRESSER_VERSION,
-		true
-	);
-}
-add_action( 'customize_preview_init', 'zeitfresser_customize_preview_js' );
-
-/**
- * Dependency UI logic
- */
-function zeitfresser_customize_controls_dependency_js() {
+function zeitfresser_customize_image_optimizer_ui() {
 	?>
 	<script>
 	(function() {
@@ -193,7 +153,6 @@ function zeitfresser_customize_controls_dependency_js() {
 			        return;
 		        }
 
-		        // Retry max 10x
 		        if (attempts < 10) {
 			        attempts++;
 			        setTimeout(tryInit, 200);
@@ -225,20 +184,27 @@ function zeitfresser_customize_controls_dependency_js() {
 	</script>
 	<?php
 }
-add_action( 'customize_controls_enqueue_scripts', 'zeitfresser_customize_controls_dependency_js' );
+add_action( 'customize_controls_enqueue_scripts', 'zeitfresser_customize_image_optimizer_ui' );
+
 
 /**
- * Small UI polish
+ * ------------------------------------------------------------------------
+ * UI Styles
+ * ------------------------------------------------------------------------
  */
-add_action( 'customize_controls_enqueue_scripts', function() {
-?>
-<style>
-#customize-control-ztfr_auto_optimize > label,
-#customize-control-ztfr_auto_delete > label {
-	display:flex;
-	align-items:flex-start;
-	gap:6px;
+function zeitfresser_customize_image_optimizer_ui_styles() {
+	?>
+	<style>
+	#customize-control-ztfr_auto_optimize > label,
+	#customize-control-ztfr_auto_delete > label {
+		display:flex;
+		align-items:flex-start;
+		gap:6px;
+	}
+	</style>
+	<?php
 }
-</style>
-<?php
-});
+add_action(
+	'customize_controls_enqueue_scripts',
+	'zeitfresser_customize_image_optimizer_ui_styles'
+);

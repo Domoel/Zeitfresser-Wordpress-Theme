@@ -24,38 +24,33 @@ if ( ! defined( 'ZEITFRESSER_IMAGE_OPTIMIZATION_VERSION' ) ) {
 
 /**
  * ------------------------------------------------------------------------
- * Core Modules
+ * Customizer
  * ------------------------------------------------------------------------
  */
-
-// Helpers (foundation)
-require get_template_directory() . '/inc/helpers/zeitfresser-helpers.php';
-
-// Theme logic
-require get_template_directory() . '/inc/zeitfresser-toc.php';
-
-// Performance layer
-require get_template_directory() . '/inc/performance/performance-tools.php';
+require get_template_directory() . '/inc/customizer/core-settings.php';
+require get_template_directory() . '/inc/customizer/general-settings.php';
+require get_template_directory() . '/inc/customizer/layout-settings.php';
+require get_template_directory() . '/inc/customizer/toc-settings.php';
+require get_template_directory() . '/inc/customizer/social-settings.php';
+require get_template_directory() . '/inc/customizer/image-optimizer-settings.php';
 
 /**
  * ------------------------------------------------------------------------
- * Customizer (modular)
+ * Utilities
  * ------------------------------------------------------------------------
  */
-require get_template_directory() . '/inc/customizer/core.php';
-require get_template_directory() . '/inc/customizer/general.php';
-require get_template_directory() . '/inc/customizer/layout.php';
-require get_template_directory() . '/inc/customizer/toc.php';
-require get_template_directory() . '/inc/customizer/social.php';
+require get_template_directory() . '/inc/utilities/helpers.php';
+require get_template_directory() . '/inc/utilities/template-tags.php';
+require get_template_directory() . '/inc/utilities/template-functions.php';
+require get_template_directory() . '/inc/utilities/pagination.php';
+require get_template_directory() . '/inc/utilities/toc.php';
 
 /**
  * ------------------------------------------------------------------------
- * Theme Utilities
+ * Tools
  * ------------------------------------------------------------------------
  */
-require get_template_directory() . '/inc/template-tags.php';
-require get_template_directory() . '/inc/template-functions.php';
-require get_template_directory() . '/inc/pagination.php';
+require get_template_directory() . '/inc/tools/image-optimizer.php';
 
 /**
  * ------------------------------------------------------------------------
