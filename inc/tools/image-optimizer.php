@@ -10,6 +10,272 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
+ * ------------------------------------------------------------------------
+ * Upload Handling (Original File Tracking)
+ * ------------------------------------------------------------------------
+ */
+function zeitfresser_capture_original_upload( $upload, $context ) {
+
+    if ( empty( $upload['file'] ) ) {
+        return $upload;
+    }
+
+    // Store temporarily (request-scoped)
+    $GLOBALS['zeitfresser_last_uploaded_file'] = $upload['file'];
+
+    return $upload;
+}
+add_filter( 'wp_handle_upload', 'zeitfresser_capture_original_upload', 10, 2 );
+
+/**
+ * Persist original file path to attachment meta
+ */
+function zeitfresser_store_original_file( $attachment_id ) {
+
+    if ( ! wp_attachment_is_image( $attachment_id ) ) {
+        return;
+    }
+
+    if ( empty( $GLOBALS['zeitfresser_last_uploaded_file'] ) ) {
+        return;
+    }
+
+    $file = $GLOBALS['zeitfresser_last_uploaded_file'];
+
+    // Safety: ensure file still exists
+    if ( ! file_exists( $file ) ) {
+        return;
+    }
+
+    // Prevent overwrite if already set
+    if ( get_post_meta( $attachment_id, '_zeitfresser_original_file', true ) ) {
+        return;
+    }
+
+    update_post_meta(
+        $attachment_id,
+        '_zeitfresser_original_file',
+        $file
+    );
+}
+add_action( 'add_attachment', 'zeitfresser_store_original_file' );
+
+/**
+ * Convert generated JPEG and PNG files to AVIF/WebP when enabled.
+ *
+ * Auto optimization can be disabled for uploads via Customizer.
+ * Manual optimization may still force conversion through a request-scoped flag.
+ *
+ * @param array $formats Output format map.
+ * @return array
+ */
+function zeitfresser_image_output_format( $formats ) {
+
+    $auto_enabled  = get_theme_mod( 'ztfr_auto_optimize', true );
+    $force_enabled = ! empty( $GLOBALS['zeitfresser_force_image_optimization'] );
+
+    if ( ! $auto_enabled && ! $force_enabled ) {
+        return $formats;
+    }
+
+    if ( function_exists( 'wp_image_editor_supports' ) ) {
+
+        // Prefer AVIF if supported.
+        if ( wp_image_editor_supports( array( 'mime_type' => 'image/avif' ) ) ) {
+            $formats['image/jpeg'] = 'image/avif';
+            $formats['image/png']  = 'image/avif';
+
+        // Fallback to WebP.
+        } elseif ( wp_image_editor_supports( array( 'mime_type' => 'image/webp' ) ) ) {
+            $formats['image/jpeg'] = 'image/webp';
+            $formats['image/png']  = 'image/webp';
+        }
+    }
+
+    return $formats;
+}
+add_filter( 'image_editor_output_format', 'zeitfresser_image_output_format' );
+
+/**
+ * Mark images as optimized only when optimization is actually active.
+ *
+ * @param array $metadata Attachment metadata.
+ * @param int   $attachment_id Attachment ID.
+ * @return array
+ */
+function zeitfresser_mark_new_images_optimized( $metadata, $attachment_id ) {
+
+    if ( ! wp_attachment_is_image( $attachment_id ) ) {
+        return $metadata;
+    }
+
+    $auto_enabled  = get_theme_mod( 'ztfr_auto_optimize', true );
+    $force_enabled = ! empty( $GLOBALS['zeitfresser_force_image_optimization'] );
+
+    if ( ! $auto_enabled && ! $force_enabled ) {
+        return $metadata;
+    }
+
+    update_post_meta(
+        $attachment_id,
+        '_zeitfresser_media_optimized_version',
+        ZEITFRESSER_IMAGE_OPTIMIZATION_VERSION
+    );
+
+    return $metadata;
+}
+add_filter( 'wp_generate_attachment_metadata', 'zeitfresser_mark_new_images_optimized', 20, 2 );
+
+/**
+ * Auto Optimize Hook
+ */
+add_filter(
+    'wp_generate_attachment_metadata',
+    'zeitfresser_auto_optimize_on_upload',
+    15,
+    2
+);
+
+function zeitfresser_auto_optimize_on_upload( $metadata, $attachment_id ) {
+
+    // Only images
+    if ( ! wp_attachment_is_image( $attachment_id ) ) {
+        return $metadata;
+    }
+
+    // Feature toggle
+    if ( ! get_theme_mod( 'ztfr_auto_optimize', true ) ) {
+        return $metadata;
+    }
+
+    $file = get_attached_file( $attachment_id );
+
+    if ( ! $file || ! file_exists( $file ) ) {
+        return $metadata;
+    }
+
+    // DO NOT overwrite captured original
+    if ( ! get_post_meta( $attachment_id, '_zeitfresser_original_file', true ) ) {
+        update_post_meta( $attachment_id, '_zeitfresser_original_file', $file );
+    }
+
+    // Mark optimized (IMPORTANT: no re-trigger here)
+    update_post_meta(
+        $attachment_id,
+        '_zeitfresser_media_optimized_version',
+        ZEITFRESSER_IMAGE_OPTIMIZATION_VERSION
+    );
+
+    return $metadata;
+}
+
+/**
+ * Auto Delete Hook
+ */
+add_filter(
+    'wp_generate_attachment_metadata',
+    'zeitfresser_auto_delete_original_after_upload',
+    30,
+    2
+);
+
+function zeitfresser_auto_delete_original_after_upload( $metadata, $attachment_id ) {
+
+    if ( ! wp_attachment_is_image( $attachment_id ) ) {
+        return $metadata;
+    }
+
+    $auto_enabled  = get_theme_mod( 'ztfr_auto_optimize', true );
+    $delete_enabled = get_theme_mod( 'ztfr_auto_delete', false );
+
+    if ( ! $auto_enabled || ! $delete_enabled ) {
+        return $metadata;
+    }
+
+    $original = get_post_meta(
+        $attachment_id,
+        '_zeitfresser_original_file',
+        true
+    );
+
+    if ( ! $original ) {
+        return $metadata;
+    }
+
+    $ext = strtolower( pathinfo( $original, PATHINFO_EXTENSION ) );
+
+    // Skip modern formats
+    if ( in_array( $ext, [ 'webp', 'avif' ], true ) ) {
+        update_post_meta( $attachment_id, '_zeitfresser_original_deleted', 1 );
+        return $metadata;
+    }
+
+    // 🔥 Wenn nichts mehr existiert → fertig
+    if ( ! zeitfresser_original_family_exists( $attachment_id, $original ) ) {
+        update_post_meta( $attachment_id, '_zeitfresser_original_deleted', 1 );
+        return $metadata;
+    }
+
+    // 🔥 HIER passiert der Fix
+    zeitfresser_delete_original_family_files( $attachment_id, $original );
+
+    // Final check
+    if ( ! zeitfresser_original_family_exists( $attachment_id, $original ) ) {
+        update_post_meta( $attachment_id, '_zeitfresser_original_deleted', 1 );
+    }
+
+    return $metadata;
+}
+
+/**
+ * Keep generated image quality balanced for file size and visual fidelity.
+ *
+ * @param int    $quality Proposed image quality.
+ * @param string $mime_type Image mime type.
+ * @return int
+ */
+function zeitfresser_image_quality( $quality, $mime_type = 'image/jpeg' ) {
+
+    $auto_enabled  = get_theme_mod( 'ztfr_auto_optimize', true );
+    $force_enabled = ! empty( $GLOBALS['zeitfresser_force_image_optimization'] );
+
+    if ( ! $auto_enabled && ! $force_enabled ) {
+        return $quality;
+    }
+
+    return match ($mime_type) {
+        'image/avif' => 50,
+        'image/webp' => 75,
+        default => 82,
+    };
+}
+add_filter( 'wp_editor_set_quality', 'zeitfresser_image_quality', 10, 2 );
+
+/**
+ * Improve responsive image sizes attribute.
+ *
+ * @param string $sizes Existing sizes attribute.
+ * @param array  $size  Requested image size.
+ * @return string
+ */
+function zeitfresser_responsive_image_sizes( $sizes, $size ) {
+
+    // Single post content
+    if ( is_singular() ) {
+        return '(max-width: 768px) 100vw, (max-width: 1200px) 720px, 720px';
+    }
+
+    // Archive / blog overview
+    if ( is_home() || is_front_page() || is_archive() || is_search() ) {
+        return '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 400px';
+    }
+
+    return $sizes;
+}
+add_filter( 'wp_calculate_image_sizes', 'zeitfresser_responsive_image_sizes', 10, 2 );
+
+
+/**
  * Register admin page
  */
 function zeitfresser_register_image_optimizer_page() {
