@@ -17,6 +17,34 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
+ * Check if current post content contains code blocks.
+ *
+ * @return bool
+ */
+function ztfr_has_code_block() {
+
+	if ( is_admin() ) {
+		return false;
+	}
+
+	if ( ! is_singular() ) {
+		return false;
+	}
+
+	global $post;
+
+	if ( ! isset( $post ) || empty( $post->post_content ) ) {
+		return false;
+	}
+
+	if ( has_block( 'ztfr/code-block', $post ) ) {
+		return true;
+	}
+
+	return false !== strpos( $post->post_content, '<pre' );
+}
+
+/**
  * Get asset version from file modification time.
  *
  * @param string $relative_path Relative path inside the theme directory.
@@ -38,6 +66,11 @@ function ztfr_code_asset_version( $relative_path ) {
 function ztfr_enqueue_code_assets() {
 
 	if ( is_admin() ) {
+		return;
+	}
+	
+	// 🔥 Nur laden wenn Codeblock vorhanden
+	if ( ! ztfr_has_code_block() ) {
 		return;
 	}
 
