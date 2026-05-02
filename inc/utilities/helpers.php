@@ -224,3 +224,11 @@ if ( ! function_exists( 'zeitfresser_asset' ) ) {
         return get_template_directory_uri() . '/assets/' . ltrim($path, '/');
     }
 }
+
+/**
+ * Delete Cookie Button
+ */
+ add_filter( 'comment_form_default_fields', function( $fields ) {
+    unset( $fields['cookies'] );
+    return $fields;
+});

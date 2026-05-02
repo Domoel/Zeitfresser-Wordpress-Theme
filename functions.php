@@ -51,6 +51,7 @@ require get_template_directory() . '/inc/utilities/toc.php';
  * ------------------------------------------------------------------------
  */
 require get_template_directory() . '/inc/tools/image-optimizer.php';
+require get_template_directory() . '/inc/tools/code-block.php';
 
 /**
  * ------------------------------------------------------------------------
@@ -142,8 +143,6 @@ function zeitfresser_setup() {
     register_nav_menus( array(
         'menu-1' => esc_html__( 'Primary', 'zeitfresser' ),
     ));
-
-    add_editor_style( 'editor-style.css' );
 }
 add_action( 'after_setup_theme', 'zeitfresser_setup' );
 
@@ -247,6 +246,13 @@ function zeitfresser_scripts() {
     }
 }
 add_action( 'wp_enqueue_scripts', 'zeitfresser_scripts', 10 );
+
+// Editor Styles
+function zeitfresser_editor_styles_setup() {
+    add_theme_support( 'editor-styles' );
+    add_editor_style( 'assets/css/editor.css' );
+}
+add_action( 'after_setup_theme', 'zeitfresser_editor_styles_setup' );
 
 /**
  * ------------------------------------------------------------------------
@@ -693,11 +699,3 @@ function zeitfresser_responsive_image_sizes( $sizes, $size ) {
     return $sizes;
 }
 add_filter( 'wp_calculate_image_sizes', 'zeitfresser_responsive_image_sizes', 10, 2 );
-
-/**
- * Delete Cookie Button
- */
- add_filter( 'comment_form_default_fields', function( $fields ) {
-    unset( $fields['cookies'] );
-    return $fields;
-});

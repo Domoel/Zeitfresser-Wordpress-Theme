@@ -1,0 +1,161 @@
+/**
+ * Code block styles
+ *
+ * Frontend and editor preview styles for the Zeitfresser code block feature.
+ * The selectors are scoped to avoid leaking into unrelated blocks or plugins.
+ */
+
+/* -------------------------------------------------------------------------
+   Code block wrapper
+------------------------------------------------------------------------- */
+
+.ztfr-code {
+  position: relative;
+  background-color: var(--footer-color);
+  color: var(--light-color);
+  padding: 1.1rem 1.2rem;
+  margin: 1rem 0;
+  border-radius: 6px;
+  max-width: 100%;
+  overflow-x: auto;
+  font-family: var(--secondary-font);
+  font-size: 0.870rem;
+  line-height: 1.6;
+  font-weight: 400;
+  border: 1px solid rgba(248, 248, 242, 0.08);
+}
+
+/* -------------------------------------------------------------------------
+   Prism overrides
+------------------------------------------------------------------------- */
+
+.ztfr-code pre,
+.ztfr-code code {
+  background: transparent;
+  color: inherit;
+}
+
+.ztfr-code pre[class*="language-"],
+.ztfr-code code[class*="language-"] {
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  white-space: pre-wrap !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+}
+
+.ztfr-code pre[class*="language-"] {
+  overflow-x: visible !important;
+}
+
+.ztfr-code pre code {
+  display: block;
+  padding: 1rem;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* -------------------------------------------------------------------------
+   Copy button
+------------------------------------------------------------------------- */
+
+.ztfr-code__copy {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background-color: var(--footer-color);
+  color: var(--light-color);
+  border: 1px solid rgba(248, 248, 242, 0.12);
+  border-radius: 4px;
+  font-size: 0.72rem;
+  line-height: 1;
+  padding: 0.45rem 0.65rem;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.ztfr-code:hover .ztfr-code__copy {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.ztfr-code__copy:hover {
+  background-color: var(--hover-color);
+  color: #f8f8f2;
+}
+
+.ztfr-code__copy:focus {
+  opacity: 1;
+  pointer-events: auto;
+
+  outline: 2px solid #bd93f9;
+  outline-offset: 2px;
+}
+
+/* -------------------------------------------------------------------------
+   Dracula token colors
+------------------------------------------------------------------------- */
+
+.ztfr-code .token.comment,
+.ztfr-code .token.prolog,
+.ztfr-code .token.doctype,
+.ztfr-code .token.cdata {
+  color: #6272a4;
+}
+
+.ztfr-code .token.punctuation {
+  color: #f8f8f2;
+}
+
+.ztfr-code .token.tag,
+.ztfr-code .token.constant,
+.ztfr-code .token.symbol,
+.ztfr-code .token.deleted {
+  color: #ff79c6;
+}
+
+.ztfr-code .token.attr-name,
+.ztfr-code .token.property,
+.ztfr-code .token.selector,
+.ztfr-code .token.important,
+.ztfr-code .token.atrule {
+  color: #8be9fd;
+}
+
+.ztfr-code .token.attr-value,
+.ztfr-code .token.string,
+.ztfr-code .token.char,
+.ztfr-code .token.inserted {
+  color: #f1fa8c;
+}
+
+.ztfr-code .token.keyword,
+.ztfr-code .token.boolean,
+.ztfr-code .token.number {
+  color: #bd93f9;
+}
+
+.ztfr-code .token.operator,
+.ztfr-code .token.entity,
+.ztfr-code .token.url {
+  color: #f8f8f2;
+}
+
+.ztfr-code .token.function,
+.ztfr-code .token.class-name {
+  color: #50fa7b;
+}
+
+.block-editor-block-list__layout .ztfr-code,
+.editor-styles-wrapper .ztfr-code {
+  margin: 0;
+}
