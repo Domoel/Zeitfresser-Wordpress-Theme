@@ -69,6 +69,10 @@ function ztfr_enqueue_code_assets() {
 		return;
 	}
 	
+<<<<<<< HEAD
+=======
+	// 🔥 Nur laden wenn Codeblock vorhanden
+>>>>>>> 1ee3574d03f75ed3016267f2fdfbc78f468fcaa0
 	if ( ! ztfr_has_code_block() ) {
 		return;
 	}
