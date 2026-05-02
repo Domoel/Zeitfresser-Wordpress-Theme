@@ -315,6 +315,9 @@ textarea {
   background-color: var(--footer-color);
   color: var(--light-color);
 
+  border-radius: 0;
+  border: 1px solid rgba(248, 248, 242, 0.08);
+
   padding: 1rem;
   margin-bottom: 2rem;
 }
@@ -1170,33 +1173,62 @@ header.site-header .social-links svg:hover {
 
 .widget_search .wp-block-search__inside-wrapper {
   display: grid;
-  grid-template-columns: 4fr 1fr;
+  grid-template-columns: 1fr auto;
   gap: 0;
+  background: transparent;
+  border: none;
+  overflow: hidden;
 }
 
-@media (max-width: 1200px) {
-  .widget_search .wp-block-search__inside-wrapper {
-    display: block;
-  }
-}
-
-@media (max-width: 900px) {
-  .widget_search .wp-block-search__inside-wrapper {
-    display: grid;
-  }
-}
-
-.widget_search input[type="search"] {
+.widget_search .wp-block-search__input,
+.sidebar .wp-block-search__input {
   width: 100%;
-  height: 100%;
-  padding: 1rem 1.5rem;
-  border-radius: 0;
+  height: 36px;
+  padding: 0 12px;
+
+  background-color: rgba(255,255,255,0.04) !important;
+  color: var(--light-color);
+
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+
+  appearance: none;
 }
 
-.widget_search input[type="submit"],
+.widget_search .wp-block-search__input:focus,
+.sidebar .wp-block-search__input:focus {
+  border-color: var(--hover-color) !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.widget_search .wp-block-search__input::placeholder,
+.sidebar .wp-block-search__input::placeholder {
+  color: rgba(248,248,242,0.5);
+}
+
 .widget_search .wp-block-search__button {
-  width: 100%;
-  padding: 1rem 2rem;
+  height: 36px;
+  padding: 0 14px;
+
+  border: none;
+  border-radius: 0;
+
+  background-color: var(--footer-color);
+  color: var(--light-color);
+
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.widget_search .wp-block-search__button:hover {
+  background-color: var(--hover-color);
+  color: var(--dark-color);
 }
 
 /* Empty State (404 + Search) */
@@ -1215,9 +1247,12 @@ header.site-header .social-links svg:hover {
 .error-404 .page-content,
 .search-no-results .page-content {
   background-color: var(--footer-color);
+  
+  border-radius: 0;
+  border: 1px solid rgba(248, 248, 242, 0.08);
+  
   padding: 2rem;
   margin: 1.5rem auto 0;
-  border-radius: 6px;
   max-width: 500px;
   width: 100%;
   box-sizing: border-box;
@@ -1283,44 +1318,6 @@ header.site-header .social-links svg:hover {
   .search-no-results .search-submit {
     width: 100%;
   }
-}
-
-/* Sidebar Search */
-
-.widget_search form {
-  display: flex;
-  align-items: center;
-  height: 32px;
-  border: 1px solid #4a4d61;
-  border-radius: 4px;
-  background-color: #383a4a;
-  overflow: hidden;
-}
-
-.widget_search input[type="search"] {
-  flex: 1;
-  padding: 0 10px;
-  background: transparent;
-  border: none;
-  color: var(--light-color);
-}
-
-.widget_search button[type="submit"] {
-  display: flex;
-  align-items: center;
-  padding: 0 12px;
-  height: 100%;
-  border: none;
-  background-color: var(--hover-color);
-  color: var(--dark-color);
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  cursor: pointer;
-}
-
-.widget_search form:focus-within {
-  border-color: var(--hover-color);
 }
 
 /* Posts and Pages */
@@ -1661,21 +1658,6 @@ header.page-header h1 {
   color: var(--light-color);
 }
 
-/* Readmore KANN WEG? */
-
-.readmore {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-
-  font-family: var(--primary-font);
-}
-
-.readmore svg {
-  height: 1.2em;
-  fill: currentColor; 
-}
-
 /* Header / Footer Meta */
 
 .info.ihead,
@@ -1831,7 +1813,7 @@ header.page-header h1 {
 }
 
 .site-footer a {
-  color: inherit; /* inherits light-color */
+  color: inherit;
   border-bottom: 1px solid rgba(255,255,255,0.2);
 }
 

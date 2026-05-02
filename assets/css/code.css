@@ -9,20 +9,32 @@
    Code block wrapper
 ------------------------------------------------------------------------- */
 
+/* -------------------------------------------------------------------------
+   Code block wrapper
+------------------------------------------------------------------------- */
+
 .ztfr-code {
   position: relative;
+
   background-color: var(--footer-color);
   color: var(--light-color);
-  padding: 1.1rem 1.2rem;
+
+  padding: 1rem 1.2rem;
   margin: 1rem 0;
-  border-radius: 6px;
+
+  border-radius: 0;
+  border: 1px solid rgba(248, 248, 242, 0.08);
+  border-left: 4px solid var(--hover-color);
+
   max-width: 100%;
   overflow-x: auto;
+
   font-family: var(--secondary-font);
-  font-size: 0.870rem;
+  font-size: 0.85rem;
   line-height: 1.6;
   font-weight: 400;
-  border: 1px solid rgba(248, 248, 242, 0.08);
+
+  box-shadow: none;
 }
 
 /* -------------------------------------------------------------------------
