@@ -5,7 +5,7 @@ Author: Zeitfresser
 Author URI: https://ztfr.eu/
 Theme URI: https://ztfr.eu/
 Description: Zeitfresser Wordpress Theme
-Version: 2.6
+Version: 2.8
 Tested up to: 6.2
 Requires PHP: 7.0
 License: GNU General Public License v2 or later
@@ -319,7 +319,7 @@ textarea {
   border: 1px solid rgba(248, 248, 242, 0.08);
 
   padding: 1rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
 .widget ul li {
@@ -1161,6 +1161,10 @@ header.site-header .social-links svg:hover {
 
 .custom-box {
   background-color: var(--footer-color);
+  
+  border-radius: 0;
+  border: 1px solid rgba(248, 248, 242, 0.08);
+  
   padding: 0.1rem 1rem;
   margin: 1rem 0;
 }
@@ -1283,6 +1287,8 @@ header.site-header .social-links svg:hover {
   background-color: rgba(255,255,255,0.04);
   border: 1px solid rgba(255,255,255,0.1);
   color: var(--light-color);
+  
+  transition: color 0.2s ease, background-size 0.2s ease, border-color 0.2s ease;
 }
 
 .error-404 .search-field:focus,
@@ -1293,12 +1299,13 @@ header.site-header .social-links svg:hover {
 
 .error-404 .search-submit,
 .search-no-results .search-submit {
-  background-color: var(--footer-color);
-  color: var(--light-color);
+  background-color: var(--light-color);
+  color: var(--dark-color);
 
   border: 1px solid rgba(255,255,255,0.15);
 
   padding: 0.75rem 1.5rem;
+  font-weight: bold;
   cursor: pointer;
 }
 
@@ -1700,6 +1707,10 @@ header.page-header h1 {
 .comment-list .comment {
   background-color: var(--footer-color);
   color: var(--light-color);
+  
+  border-radius: 0;
+  border: 1px solid rgba(248, 248, 242, 0.08);
+  
   padding: 20px;
   margin-bottom: 15px;
   border-left: 4px solid var(--hover-color);
@@ -1762,6 +1773,7 @@ header.page-header h1 {
   background-color: rgba(255,255,255,0.04);
   color: var(--light-color);
   border: 1px solid rgba(255,255,255,0.1);
+  transition: border-color 0.2s ease, background-color 0.2s ease;
 }
 
 .comment-form input:not([type="submit"]):focus,
@@ -1804,6 +1816,9 @@ header.page-header h1 {
   color: var(--light-color);
   padding: 2rem 0;
   margin-top: 3rem;
+  
+  border-radius: 0;
+  border: 1px solid rgba(248, 248, 242, 0.08);
 }
 
 .site-footer .site-info {
@@ -1930,16 +1945,19 @@ header.page-header h1 {
 .zeitfresser-floating-toc__item a {
   transform: translateZ(0);
   display: block;
-  padding-left: 14px;
+
   border-left: 3px solid transparent;
+
   color: var(--light-color);
   font-size: 0.92rem;
   line-height: 1.35;
   text-decoration: none;
+
   transition: color 0.18s ease, border-color 0.18s ease;
 }
 
 .zeitfresser-floating-toc__item.level-2 a {
+  padding-left: 14px;
   font-weight: 700;
 }
 
@@ -1948,7 +1966,7 @@ header.page-header h1 {
 }
 
 .zeitfresser-floating-toc__item.level-4 a {
-  padding-left: 26px;
+  padding-left: 22px;
 }
 
 .zeitfresser-floating-toc__item a:hover,
