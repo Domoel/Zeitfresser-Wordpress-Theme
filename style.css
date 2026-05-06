@@ -768,12 +768,6 @@ input[type=button]:hover {
   fill: var(--hover-color);
 }
 
-@media (max-width: 768px) {
-  .social-links {
-    display: none;
-  }
-}
-
 /* Navigation Icons */
 
 #nav-icon3 {
@@ -1010,7 +1004,7 @@ header.site-header .social-links svg:hover {
 }
 
 .site-header .search-field::placeholder {
-  color: var(--dark-color)) !important;
+  color: var(--dark-color) !important;
   font-weight: 300;
 }
 
