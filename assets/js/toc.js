@@ -283,29 +283,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    if (nav) {
-        nav.addEventListener(
-            'wheel',
-            function (event) {
-                var canScroll = nav.scrollHeight > nav.clientHeight;
-                if (!canScroll) return;
-
-                var atTop = nav.scrollTop <= 0;
-                var atBottom =
-                    Math.ceil(nav.scrollTop + nav.clientHeight) >= nav.scrollHeight;
-
-                if (
-                    (event.deltaY < 0 && !atTop) ||
-                    (event.deltaY > 0 && !atBottom)
-                ) {
-                    event.preventDefault();
-                    nav.scrollTop += event.deltaY;
-                }
-            },
-            { passive: false }
-        );
-    }
-
     // Initial run
     syncPosition();
     handleFooterCollision();
