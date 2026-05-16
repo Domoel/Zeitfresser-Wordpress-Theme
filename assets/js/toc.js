@@ -155,7 +155,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         var tocTop = Math.max(
             stickyTop,
-            Math.round(titleRect.top + scrollTop + 14) // 🛠️ Change TOC Height (+ moves TOC down)
+            Math.round(titleRect.top + scrollTop + 14) // 🛠️ Change TOC and Content Height (+ moves Both down)
         );
 
         document.documentElement.style.setProperty('--zeitfresser-toc-top', tocTop + 'px');
@@ -269,6 +269,9 @@ document.addEventListener('DOMContentLoaded', function () {
             event.preventDefault();
 
             var tocTopValue = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--zeitfresser-toc-top'), 10) || 100;
+            // 🛠️ HÖHEN-STEUERUNG:
+            // - TOC & Klick-Ziel synchron verschieben: Die "14" in syncPosition() ändern.
+            // - NUR Klick-Ziel separat ändern: Hier Pixel addieren/abziehen (z.B. tocTopValue + 20).
             var headerOffset = tocTopValue; // add + to move Content towards Top, add - to move content down (e.g. var headerOffset = tocTopValue - 20;)
 
             var elementPosition = target.getBoundingClientRect().top;
