@@ -180,12 +180,10 @@ document.addEventListener('DOMContentLoaded', function () {
         var scrollTop = window.scrollY || window.pageYOffset;
         var articleRect = article.getBoundingClientRect();
         var articleBottom = articleRect.top + scrollTop + articleRect.height;
-
         var tocRect = toc.getBoundingClientRect();
         var tocTop = tocRect.top + scrollTop;
         var tocHeight = tocRect.height;
         var tocBottom = tocTop + tocHeight;
-
         var offset = getTocBottomOffset();
         var maxBottom = articleBottom - offset;
         var overflow = Math.ceil(tocBottom - maxBottom);
@@ -235,18 +233,35 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function updateActiveHeading() {
-            if (!headings.length || isScrollingFromClick) return;
-            var tocRect = toc.getBoundingClientRect();
-            var triggerY = tocRect.top + 40; 
+        if (!headings.length || isScrollingFromClick) return;
+        
+        var cssTop = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--zeitfresser-toc-top'), 10) || 100;
+        var triggerY = cssTop + 40; 
+        var documentHeight = Math.max(
+            document.body.scrollHeight, 
+            document.documentElement.scrollHeight,
+            document.body.offsetHeight, 
+            document.documentElement.offsetHeight
+        );
+        var scrollPosition = window.innerHeight + window.scrollY;
+        var isMaxScrolled = (documentHeight - scrollPosition) <= 50;
 
-            var currentId = headings[0].target.id;
-            for (var i = 0; i < headings.length; i++) {
-                if (headings[i].target.getBoundingClientRect().top <= triggerY) {
-                    currentId = headings[i].target.id;
-                } else { break; }
+        var currentId = headings[0].target.id;
+        
+        for (var i = 0; i < headings.length; i++) {
+            if (headings[i].target.getBoundingClientRect().top <= triggerY) {
+                currentId = headings[i].target.id;
+            } else { 
+                break; 
             }
-            setActiveLink(currentId);
         }
+
+        if (isMaxScrolled && headings.length > 0) {
+            currentId = headings[headings.length - 1].target.id;
+        }
+
+        setActiveLink(currentId);
+    }
 
     function onViewportChange() {
         if (ticking) return;
@@ -269,11 +284,7 @@ document.addEventListener('DOMContentLoaded', function () {
             event.preventDefault();
 
             var tocTopValue = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--zeitfresser-toc-top'), 10) || 100;
-            // 🛠️ HÖHEN-STEUERUNG:
-            // - TOC & Klick-Ziel synchron verschieben: Die "14" in syncPosition() ändern.
-            // - NUR Klick-Ziel separat ändern: Hier Pixel addieren/abziehen (z.B. tocTopValue + 20).
-            var headerOffset = tocTopValue; // add + to move Content towards Top, add - to move content down (e.g. var headerOffset = tocTopValue - 20;)
-
+            var headerOffset = tocTopValue;
             var elementPosition = target.getBoundingClientRect().top;
             var offsetPosition = elementPosition + window.scrollY - headerOffset;
 
@@ -288,7 +299,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Initial run
     syncPosition();
     handleFooterCollision();
     updateProgress();
