@@ -13,10 +13,6 @@ $has_floating_toc = ! empty( $toc_payload['items'] );
     <h1 class="page-title"><?php the_title(); ?></h1>
 </div>
 
-<?php if ( $has_floating_toc ) : ?>
-    <?php zeitfresser_render_floating_toc( get_the_ID() ); ?>
-<?php endif; ?>
-
 <div class="single-post">
 
     <div class="post-content">
