@@ -2205,13 +2205,6 @@ html {
   }
 }
 
-/* Hide duplicate TOC inside article body; keep only the first (floating) one */
-.zeitfresser-article-heading ~ .zeitfresser-floating-toc,
-.detail-content > .zeitfresser-floating-toc {
-  display: none !important;
-}
-
-
 
 
 
