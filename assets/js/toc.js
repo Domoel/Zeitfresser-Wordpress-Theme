@@ -113,6 +113,9 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function syncPosition() {
+        var isAdminBarActive = document.body.classList.contains('logged-in');
+        var currentStickyTop = isAdminBarActive ? (stickyTop + 32) : stickyTop;
+    
         if (!isDesktop()) {
             document.documentElement.style.setProperty('--zeitfresser-toc-top', stickyTop + 'px');
             document.documentElement.style.setProperty('--zeitfresser-toc-left', '24px');
@@ -123,7 +126,6 @@ document.addEventListener('DOMContentLoaded', function () {
         var scrollTop = window.scrollY || window.pageYOffset || 0;
         var titleRect = title.getBoundingClientRect();
 
-        // 🔥 bessere Content-Erkennung
         var contentColumn =
             document.querySelector('.inside-page .main-wrapper > section') ||
             document.querySelector('#primary') ||
@@ -153,7 +155,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         var tocTop = Math.max(
             stickyTop,
-            Math.round(titleRect.top + scrollTop + 14)
+            Math.round(titleRect.top + scrollTop + 14) // 🛠️ Change TOC Height (+ moves TOC down)
         );
 
         document.documentElement.style.setProperty('--zeitfresser-toc-top', tocTop + 'px');
@@ -199,7 +201,7 @@ document.addEventListener('DOMContentLoaded', function () {
             link.classList.toggle('is-active', active);
             if (active) {
                 link.setAttribute('aria-current', 'true');
-                // 🔥 Nur scrollen, wenn der Klick NICHT die Ursache war
+
                 if (!isScrollingFromClick) {
                     link.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 }
@@ -266,7 +268,16 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!target) return;
             event.preventDefault();
 
-            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            var tocTopValue = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--zeitfresser-toc-top'), 10) || 100;
+            var headerOffset = tocTopValue; // add + to move Content towards Top, add - to move content down (e.g. var headerOffset = tocTopValue - 20;)
+
+            var elementPosition = target.getBoundingClientRect().top;
+            var offsetPosition = elementPosition + window.scrollY - headerOffset;
+
+            window.scrollTo({
+                top: offsetPosition,
+                behavior: 'smooth'
+            });
 
             if (history.pushState) {
                 history.pushState(null, null, '#' + target.id);
