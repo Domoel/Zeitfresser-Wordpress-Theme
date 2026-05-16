@@ -1861,21 +1861,22 @@ header.page-header h1 {
 
 .zeitfresser-floating-toc {
   position: fixed;
-  top: calc(var(--toc-viewport-offset));
-  left: var(--zeitfresser-toc-left, 24px);
+  top: calc(var(--toc-viewport-offset) - 6px);
+  left: var(--zeitfresser-toc-left, 24px); 
+  width: var(--zeitfresser-toc-width, 240px);
+  max-height: calc(100vh - var(--toc-viewport-offset) - 20px);
+  z-index: 999;
+  opacity: 0; 
+  transition: opacity 0.2s ease-out;
+  pointer-events: none;
+  will-change: transform;
+  transform: translateZ(0);
+}
 
-  width: var(--zeitfresser-toc-width);
-  max-height: calc(100vh - var(--toc-viewport-offset) - 36px);
-
-  background: transparent;
-  border: none;
-  box-shadow: none;
-
-  overflow: visible;
-  z-index: 80;
-
-  opacity: 0;
-  transition: opacity 0.12s ease-out;
+.zeitfresser-floating-toc__header,
+.zeitfresser-floating-toc__progress,
+.zeitfresser-floating-toc__nav {
+  pointer-events: auto;
 }
 
 .zeitfresser-floating-toc.is-visible {
@@ -1892,14 +1893,12 @@ header.page-header h1 {
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-
   color: rgba(247, 247, 250, 0.76);
 }
 
 .zeitfresser-floating-toc__progress {
   height: 2px;
   margin-bottom: 16px;
-
   border-radius: 999px;
   background: rgba(189, 147, 249, 0.18);
   overflow: hidden;
@@ -1914,12 +1913,13 @@ header.page-header h1 {
 }
 
 .zeitfresser-floating-toc__nav {
-  max-height: calc(100vh - var(--toc-viewport-offset) - 46px);
+  position: relative;
+  max-height: calc(100vh - var(--toc-viewport-offset) - 80px);
   overflow-y: auto;
-
   padding-right: 8px;
-
   scrollbar-width: none;
+  background: rgba(0, 0, 0, 0.01);
+  overscroll-behavior: contain; 
 }
 
 .zeitfresser-floating-toc__nav::-webkit-scrollbar {
@@ -1937,16 +1937,12 @@ header.page-header h1 {
 }
 
 .zeitfresser-floating-toc__item a {
-  transform: translateZ(0);
   display: block;
-
   border-left: 3px solid transparent;
-
   color: var(--light-color);
   font-size: 0.92rem;
   line-height: 1.35;
   text-decoration: none;
-
   transition: color 0.18s ease, border-color 0.18s ease;
 }
 
@@ -2189,7 +2185,7 @@ header.page-header h1 {
 .inner-article-content h2,
 .inner-article-content h3,
 .inner-article-content h4 {
-  scroll-margin-top: 88px;
+  scroll-margin-top: calc(var(--toc-viewport-offset) - 10px) !important; /* Verschiebt Content*/
 }
 
 /* Global Scroll Behavior */
@@ -2209,6 +2205,11 @@ html {
   }
 }
 
+/* Hide duplicate TOC inside article body; keep only the first (floating) one */
+.zeitfresser-article-heading ~ .zeitfresser-floating-toc,
+.detail-content > .zeitfresser-floating-toc {
+  display: none !important;
+}
 
 
 

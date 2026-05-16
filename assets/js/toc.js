@@ -46,8 +46,8 @@ document.addEventListener('DOMContentLoaded', function () {
     var links = Array.prototype.slice.call(toc.querySelectorAll('a[data-target]'));
     var desktopQuery = window.matchMedia('(min-width: 1500px)');
     var stickyTop = 100;
-    var headingOffset = 88;
     var ticking = false;
+    var isScrollingFromClick = false;
     var tocBottomOffset = null;
     var cachedSidebar = null;
     var headings = getHeadings();
@@ -197,9 +197,12 @@ document.addEventListener('DOMContentLoaded', function () {
         links.forEach(function (link) {
             var active = link.getAttribute('data-target') === id;
             link.classList.toggle('is-active', active);
-
             if (active) {
                 link.setAttribute('aria-current', 'true');
+                // 🔥 Nur scrollen, wenn der Klick NICHT die Ursache war
+                if (!isScrollingFromClick) {
+                    link.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
             } else {
                 link.removeAttribute('aria-current');
             }
@@ -230,23 +233,18 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function updateActiveHeading() {
-        if (!headings.length) return;
+            if (!headings.length || isScrollingFromClick) return;
+            var tocRect = toc.getBoundingClientRect();
+            var triggerY = tocRect.top + 40; 
 
-        var currentId = headings[0].target.id;
-        var triggerY = headingOffset + 24;
-
-        for (var i = 0; i < headings.length; i++) {
-            var rectTop = headings[i].target.getBoundingClientRect().top;
-
-            if (rectTop <= triggerY) {
-                currentId = headings[i].target.id;
-            } else {
-                break;
+            var currentId = headings[0].target.id;
+            for (var i = 0; i < headings.length; i++) {
+                if (headings[i].target.getBoundingClientRect().top <= triggerY) {
+                    currentId = headings[i].target.id;
+                } else { break; }
             }
+            setActiveLink(currentId);
         }
-
-        setActiveLink(currentId);
-    }
 
     function onViewportChange() {
         if (ticking) return;
@@ -266,45 +264,15 @@ document.addEventListener('DOMContentLoaded', function () {
         link.addEventListener('click', function (event) {
             var target = getTarget(link);
             if (!target) return;
-
             event.preventDefault();
 
-            var top =
-                target.getBoundingClientRect().top +
-                window.scrollY -
-                headingOffset;
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-            window.scrollTo({
-                top: top,
-                behavior: 'smooth'
-            });
-
-            setActiveLink(target.id);
+            if (history.pushState) {
+                history.pushState(null, null, '#' + target.id);
+            }
         });
     });
-
-    if (nav) {
-        nav.addEventListener(
-            'wheel',
-            function (event) {
-                var canScroll = nav.scrollHeight > nav.clientHeight;
-                if (!canScroll) return;
-
-                var atTop = nav.scrollTop <= 0;
-                var atBottom =
-                    Math.ceil(nav.scrollTop + nav.clientHeight) >= nav.scrollHeight;
-
-                if (
-                    (event.deltaY < 0 && !atTop) ||
-                    (event.deltaY > 0 && !atBottom)
-                ) {
-                    event.preventDefault();
-                    nav.scrollTop += event.deltaY;
-                }
-            },
-            { passive: false }
-        );
-    }
 
     // Initial run
     syncPosition();
