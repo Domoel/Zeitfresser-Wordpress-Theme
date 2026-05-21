@@ -13,18 +13,17 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Holt die Anzahl der Fediverse-Interaktionen
  */
 function zeitfresser_get_fediverse_metrics( $post_id ) {
-    // Nutzt native WP-Funktionen. Stürzt nicht ab, wenn das Plugin fehlt.
     $likes = get_comments( array(
         'post_id'      => $post_id,
         'status'       => 'approve',
-        'comment_type' => 'like',
+        'type'         => 'like', 
         'count'        => true
     ) );
 
     $boosts = get_comments( array(
         'post_id'      => $post_id,
         'status'       => 'approve',
-        'comment_type' => 'announce',
+        'type__in'     => array( 'announce', 'repost' ),
         'count'        => true
     ) );
 
