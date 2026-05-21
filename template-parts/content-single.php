@@ -38,17 +38,26 @@ $has_floating_toc = ! empty( $toc_payload['items'] );
 
             <!-- Comments (TRUE) -->
             <span class="comments">
-                <svg style="vertical-align:middle;" width="20px" height="20px" viewBox="0 0 24 24">
-                    <g>
-                        <path d="M17,3.25H7A4.756,4.756,0,0,0,2.25,8V21a.75.75,0,0,0,1.28.53l2.414-2.414a1.246,1.246,0,0,1,.885-.366H17A4.756,4.756,0,0,0,21.75,14V8A4.756,4.756,0,0,0,17,3.25Z"/>
-                    </g>
-                </svg>
-                <?php comments_popup_link( __( '0', 'zeitfresser' ), __( '1', 'zeitfresser' ), __( '%', 'zeitfresser' ) ); ?>
-                
-                <?php 
+                <a
+                    href="<?php echo esc_url( get_comments_link() ); ?>"
+                    title="<?php esc_attr_e( 'Jump to comments', 'zeitfresser' ); ?>"
+                    style="display:inline-flex; align-items:center; gap:4px; color:inherit; text-decoration:none; vertical-align:middle;"
+                >
+                    <svg style="display:block;" width="20px" height="20px" viewBox="0 0 24 24">
+                        <g>
+                            <path d="M17,3.25H7A4.756,4.756,0,0,0,2.25,8V21a.75.75,0,0,0,1.28.53l2.414-2.414a1.246,1.246,0,0,1,.885-.366H17A4.756,4.756,0,0,0,21.75,14V8A4.756,4.756,0,0,0,17,3.25Z"/>
+                        </g>
+                    </svg>
+
+                    <span>
+                        <?php comments_number( __( '0', 'zeitfresser' ), __( '1', 'zeitfresser' ), __( '%', 'zeitfresser' ) ); ?>
+                    </span>
+                </a>
+
+                <?php
                 if ( function_exists( 'zeitfresser_render_fediverse_meta' ) ) {
                     echo zeitfresser_render_fediverse_meta();
-                } 
+                }
                 ?>
             </span>
         </div>
