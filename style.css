@@ -1966,10 +1966,10 @@ header.page-header h1 {
   border-left-color: var(--hover-color);
 }
 
-@media (max-width: 1650px) {
-  .zeitfresser-floating-toc {
-    display: none;
-  }
+.zeitfresser-floating-toc.is-colliding {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden;
 }
 
 /* Accessibility */

@@ -88,6 +88,7 @@ document.addEventListener('DOMContentLoaded', function () {
             document.documentElement.style.setProperty('--zeitfresser-toc-top', stickyTop + 'px');
             document.documentElement.style.setProperty('--zeitfresser-toc-left', '24px');
             document.documentElement.style.setProperty('--zeitfresser-toc-width', '220px');
+            toc.classList.add('is-colliding'); 
             return;
         }
 
@@ -110,6 +111,16 @@ document.addEventListener('DOMContentLoaded', function () {
         if (sidebarRect) {
             gap = Math.abs(sidebarRect.left - contentRect.right);
             gap = Math.max(32, Math.min(gap, 120));
+        }
+
+        var minTocWidth = 220; // Deine minimale TOC-Breite
+        var minLeftMargin = 24; // Dein minimaler Abstand zum linken Rand
+        var requiredSpace = minTocWidth + 10 + minLeftMargin; // Default: var requiredSpace = minTocWidth + gap + minLeftMargin;
+
+        if (contentRect.left < requiredSpace) {
+            toc.classList.add('is-colliding');
+        } else {
+            toc.classList.remove('is-colliding');
         }
 
         var maxWidth = Math.max(Math.round(contentRect.left - gap - 24), 180);
