@@ -44,6 +44,12 @@ $has_floating_toc = ! empty( $toc_payload['items'] );
                     </g>
                 </svg>
                 <?php comments_popup_link( __( '0', 'zeitfresser' ), __( '1', 'zeitfresser' ), __( '%', 'zeitfresser' ) ); ?>
+                
+                <?php 
+                if ( function_exists( 'zeitfresser_render_fediverse_meta' ) ) {
+                    echo zeitfresser_render_fediverse_meta();
+                } 
+                ?>
             </span>
         </div>
 
@@ -64,10 +70,5 @@ $has_floating_toc = ! empty( $toc_payload['items'] );
         </article>
 
     </div>
-
-    <!-- Author Block (FALSE → entfernt) -->
-    <!-- Categories (FALSE → entfernt) -->
-    <!-- Tags (FALSE → entfernt) -->
-    <!-- Social Share (FALSE → entfernt) -->
 
 </div>
