@@ -1972,6 +1972,170 @@ header.page-header h1 {
   visibility: hidden;
 }
 
+/* Fediverse RSS Feed Widget Styles */
+
+.fediverse-rss-widget {
+    max-width: 100%;
+    margin-bottom: 0;
+    padding-bottom: 0;
+    box-sizing: border-box;
+}
+
+.fediverse-rss-widget *, 
+.fediverse-rss-widget *::before, 
+.fediverse-rss-widget *::after {
+    box-sizing: border-box;
+}
+
+.fediverse-rss-no-posts {
+    color: #a0aec0;
+    margin-bottom: 0;
+}
+
+.fediverse-rss-item {
+    display: block;
+    padding: 14px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    width: 100%;
+}
+
+.fediverse-rss-item-last {
+    padding: 14px 0 0 0;
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.fediverse-rss-header-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+    width: 100%;
+    align-items: flex-start;
+}
+
+.fediverse-rss-avatar {
+    flex-shrink: 0;
+    display: flex;
+    align-items: flex-start;
+}
+
+.fediverse-rss-avatar a,
+.fediverse-rss-avatar a:hover {
+    text-decoration: none !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
+.fediverse-rss-avatar img {
+    width: 56px;
+    height: 56px;
+    border-radius: 4px;
+    object-fit: cover;
+    display: block;
+    margin: 2px 0 0 0;
+}
+
+.fediverse-rss-header-details {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.fediverse-rss-name-line a,
+.fediverse-rss-handle-line a {
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    vertical-align: top;
+}
+
+.fediverse-rss-name-line strong {
+    color: #f0f6fc;
+    font-size: 14px;
+    display: inline;
+    text-transform: capitalize;
+    margin: 0;
+    padding: 0;
+}
+
+.fediverse-rss-handle-line {
+    min-width: 0;
+    width: 100%;
+}
+
+.fediverse-rss-handle-line span {
+    color: #8b949e;
+    font-size: 13px;
+    display: inline;
+    text-transform: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.fediverse-rss-date-line {
+    margin-top: 3px;
+    line-height: 1;
+}
+
+.fediverse-rss-date-line a {
+    color: #666;
+    font-size: 12px;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.fediverse-rss-text {
+    display: block;
+    width: 100%;
+    font-size: 14px;
+    line-height: 1.4;
+    color: #e6edf3;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+    text-align: left;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.fediverse-rss-text p {
+    margin: 0 0 8px 0;
+    padding: 0;
+    display: block;
+    width: 100%;
+}
+
+.fediverse-rss-text p:last-child {
+    margin-bottom: 0;
+}
+
+.fediverse-rss-text a {
+    color: #bd93f9;
+    text-decoration: underline;
+}
+
+.fediverse-rss-link-container {
+    margin-top: 14px;
+    margin-bottom: 0;
+    padding-bottom: 0;
+    text-align: left;
+}
+
+.fediverse-rss-link-container a {
+    color: #bd93f9;
+    text-decoration: none;
+    font-weight: 500;
+    display: inline-block;
+}
+
 /* Accessibility */
 
 .screen-reader-text:focus {

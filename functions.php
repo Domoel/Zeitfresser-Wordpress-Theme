@@ -33,6 +33,7 @@ require_once get_template_directory() . '/inc/customizer/layout-settings.php';
 require_once get_template_directory() . '/inc/customizer/toc-settings.php';
 require_once get_template_directory() . '/inc/customizer/social-settings.php';
 require_once get_template_directory() . '/inc/customizer/image-optimizer-settings.php';
+require_once get_template_directory() . '/inc/customizer/fediverse-rss-settings.php';
 
 /**
  * ------------------------------------------------------------------------
@@ -53,6 +54,7 @@ require_once get_template_directory() . '/inc/utilities/fediverse.php';
  */
 require_once get_template_directory() . '/inc/tools/image-optimizer.php';
 require_once get_template_directory() . '/inc/tools/code-block.php';
+require_once get_template_directory() . '/inc/tools/fediverse-rss.php';
 
 /**
  * ------------------------------------------------------------------------
