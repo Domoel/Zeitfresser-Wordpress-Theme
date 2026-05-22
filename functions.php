@@ -44,6 +44,7 @@ require_once get_template_directory() . '/inc/utilities/template-tags.php';
 require_once get_template_directory() . '/inc/utilities/template-functions.php';
 require_once get_template_directory() . '/inc/utilities/pagination.php';
 require_once get_template_directory() . '/inc/utilities/toc.php';
+require_once get_template_directory() . '/inc/utilities/fediverse.php';
 
 /**
  * ------------------------------------------------------------------------
@@ -52,7 +53,6 @@ require_once get_template_directory() . '/inc/utilities/toc.php';
  */
 require_once get_template_directory() . '/inc/tools/image-optimizer.php';
 require_once get_template_directory() . '/inc/tools/code-block.php';
-require_once get_template_directory() . '/inc/tools/fediverse.php';
 
 /**
  * ------------------------------------------------------------------------
