@@ -2011,13 +2011,15 @@ header.page-header h1 {
     gap: 12px;
     margin-bottom: 12px;
     width: 100%;
-    align-items: flex-start;
+    align-items: center;
 }
 
 .fediverse-rss-avatar {
     flex-shrink: 0;
     display: flex;
-    align-items: flex-start;
+    align-items: center;
+    position: relative;
+    top: 1px;
 }
 
 .fediverse-rss-avatar a,
@@ -2034,7 +2036,7 @@ header.page-header h1 {
     border-radius: 4px;
     object-fit: cover;
     display: block;
-    margin: 2px 0 0 0;
+    margin: 0;
 }
 
 .fediverse-rss-header-details {
@@ -2042,7 +2044,15 @@ header.page-header h1 {
     min-width: 0;
     display: flex;
     flex-direction: column;
+    justify-content: center;
     overflow: hidden;
+}
+
+.fediverse-rss-name-line {
+    margin-bottom: 0px;
+    line-height: 1.15;
+    position: relative;
+    top: 1px;
 }
 
 .fediverse-rss-name-line a,
@@ -2062,11 +2072,14 @@ header.page-header h1 {
     text-transform: capitalize;
     margin: 0;
     padding: 0;
+    line-height: 1.15;
 }
 
 .fediverse-rss-handle-line {
     min-width: 0;
     width: 100%;
+    margin-top: 0;
+    line-height: 1.1;
 }
 
 .fediverse-rss-handle-line span {
@@ -2078,10 +2091,11 @@ header.page-header h1 {
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 100%;
+    line-height: 1.1;
 }
 
 .fediverse-rss-date-line {
-    margin-top: 3px;
+    margin-top: 2px;
     line-height: 1;
 }
 
