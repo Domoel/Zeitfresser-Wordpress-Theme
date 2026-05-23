@@ -239,7 +239,7 @@ function gts_fediverse_style_feed() {
                 $words     = preg_split( '/\s+/', trim( $text_only ) );
 
                 $permalink = esc_url( $item->get_permalink() );
-                $date      = $item->get_date( 'j. M.' );
+                $date      = $date = $item->get_date( 'j. F' );
 
                 if ( count( $words ) > $word_limit ) {
 
@@ -263,31 +263,37 @@ function gts_fediverse_style_feed() {
 
                     <div class="fediverse-rss-header-row">
 
-                        <div class="fediverse-rss-avatar">
-                            <a href="<?php echo esc_url( $profile_url ); ?>" target="_blank" rel="noopener">
-                                <img src="<?php echo gts_fediverse_escape_img_src( $avatar_url ); ?>" alt="<?php echo esc_attr( $display_name ); ?>">
-                            </a>
-                        </div>
+                        <a
+                            class="fediverse-rss-profile-link"
+                            href="<?php echo esc_url( $profile_url ); ?>"
+                            target="_blank"
+                            rel="noopener"
+                        >
 
-                        <div class="fediverse-rss-header-details">
-                            <div class="fediverse-rss-name-line">
-                                <a href="<?php echo esc_url( $profile_url ); ?>" target="_blank" rel="noopener">
+                            <div class="fediverse-rss-avatar">
+                                <img
+                                    src="<?php echo gts_fediverse_escape_img_src( $avatar_url ); ?>"
+                                    alt="<?php echo esc_attr( $display_name ); ?>"
+                                >
+                            </div>
+
+                            <div class="fediverse-rss-header-details">
+
+                                <div class="fediverse-rss-name-line">
                                     <strong><?php echo esc_html( $display_name ); ?></strong>
-                                </a>
-                            </div>
+                                </div>
 
-                            <div class="fediverse-rss-handle-line">
-                                <a href="<?php echo esc_url( $profile_url ); ?>" target="_blank" rel="noopener">
+                                <div class="fediverse-rss-handle-line">
                                     <span><?php echo esc_html( $handle ); ?></span>
-                                </a>
+                                </div>
+
+                                <div class="fediverse-rss-date-line">
+                                    <?php echo esc_html( $date ); ?>
+                                </div>
+
                             </div>
 
-                            <div class="fediverse-rss-date-line">
-                                <a href="<?php echo $permalink; ?>" target="_blank" rel="noopener">
-                                    <?php echo esc_html( $date ); ?>
-                                </a>
-                            </div>
-                        </div>
+                        </a>
 
                     </div>
 
