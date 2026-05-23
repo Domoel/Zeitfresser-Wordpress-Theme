@@ -335,7 +335,7 @@ class Zeitfresser_Fediverse_Widget extends WP_Widget {
     public function __construct() {
         parent::__construct(
             'ztfr_fediverse_widget',
-            __( 'Zeitfresser Fediverse Social Feed Widget', 'zeitfresser' ),
+            __( 'Zeitfresser Fediverse Social Feed', 'zeitfresser' ),
             array(
                 'description' => __( 'Shows your Fediverse Posts as RSS Feed.', 'zeitfresser' ),
             )
