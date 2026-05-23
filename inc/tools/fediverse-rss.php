@@ -234,12 +234,20 @@ function gts_fediverse_style_feed() {
 
                 $hashtag_pattern = '/(?:\s*<p>\s*|(?:\s|<br\s*\/?>)*)(?:(?:<a[^>]*>)?#\w+(?:<\/a>)?(?:\s|<br\s*\/?>|&nbsp;)*)+(?:\s*<\/p>\s*)?$/u';
                 $clean_content  = preg_replace( $hashtag_pattern, '', rtrim( $clean_content ) );
+                
+                $clean_content = preg_replace( '/>\s+</', '><', $clean_content );
+                
+                $clean_content = preg_replace(
+                    '/(?:<br\s*\/?>\s*){2,}/i',
+                    '<br><span class="fediverse-rss-paragraph-spacer"></span>',
+                    $clean_content
+                );
 
                 $text_only = wp_strip_all_tags( $clean_content );
                 $words     = preg_split( '/\s+/', trim( $text_only ) );
 
                 $permalink = esc_url( $item->get_permalink() );
-                $date      = $date = $item->get_date( 'j. F' );
+                $date      = $item->get_date( 'j. F' );
 
                 if ( count( $words ) > $word_limit ) {
 
