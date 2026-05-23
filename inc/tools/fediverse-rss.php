@@ -278,9 +278,9 @@ class Zeitfresser_Fediverse_Widget extends WP_Widget {
     public function __construct() {
         parent::__construct(
             'ztfr_fediverse_widget',
-            __( 'Zeitfresser Fediverse Widget', 'zeitfresser' ),
+            __( 'Zeitfresser Fediverse Social Feed Widget', 'zeitfresser' ),
             array(
-                'description' => __( 'Zeigt deinen Fediverse-Feed an.', 'zeitfresser' ),
+                'description' => __( 'Shows your Fediverse Posts as RSS Feed.', 'zeitfresser' ),
             )
         );
     }
@@ -317,7 +317,7 @@ class Zeitfresser_Fediverse_Widget extends WP_Widget {
             >
         </p>
         <p>
-            <em><?php esc_html_e( 'Konfiguration global via Customizer.', 'zeitfresser' ); ?></em>
+            <em><?php esc_html_e( 'Configure global via Customizer.', 'zeitfresser' ); ?></em>
         </p>
         <?php
     }
