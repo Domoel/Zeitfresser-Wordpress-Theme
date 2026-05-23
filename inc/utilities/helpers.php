@@ -85,7 +85,7 @@ if ( ! function_exists( 'zeitfresser_get_social_defaults' ) ) {
     function zeitfresser_get_social_defaults() {
         return array(
             'mastodon' => 'https://social.ztfr.eu/@dome',
-            'github'   => 'https://github.com/Domoel',
+            'github'   => 'https://git.ztfr.eu/Dome',
             'matrix'   => 'https://look.ztfr.eu/#/@dome:ztfr.eu',
         );
     }
