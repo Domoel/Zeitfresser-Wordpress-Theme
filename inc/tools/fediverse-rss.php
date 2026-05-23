@@ -98,6 +98,41 @@ function gts_fediverse_get_avatar( $feed_url, $profile_url ) {
     return $fallback_avatar;
 }
 
+function gts_fediverse_trim_html_words( $html, $word_limit, $more = '...' ) {
+    $word_limit = max( 1, (int) $word_limit );
+    $words_seen = 0;
+    $output     = '';
+
+    $tokens = preg_split( '/(<[^>]+>)/', $html, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY );
+
+    foreach ( $tokens as $token ) {
+        if ( preg_match( '/^<[^>]+>$/', $token ) ) {
+            $output .= $token;
+            continue;
+        }
+
+        $parts = preg_split( '/(\s+)/u', $token, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY );
+
+        foreach ( $parts as $part ) {
+            if ( trim( $part ) === '' ) {
+                $output .= $part;
+                continue;
+            }
+
+            $words_seen++;
+
+            if ( $words_seen > $word_limit ) {
+                $output = rtrim( $output ) . $more;
+                return force_balance_tags( $output );
+            }
+
+            $output .= $part;
+        }
+    }
+
+    return force_balance_tags( $output );
+}
+
 // =========================================================================
 // 2. SHORTCODE RENDERING
 // =========================================================================
@@ -207,9 +242,17 @@ function gts_fediverse_style_feed() {
                 $date      = $item->get_date( 'j. M.' );
 
                 if ( count( $words ) > $word_limit ) {
-                    $content   = wp_html_excerpt( $clean_content, $word_limit * 7, '...' );
+
+                    $content = gts_fediverse_trim_html_words(
+                        $clean_content,
+                        $word_limit,
+                        '...'
+                    );
+
                     $link_text = '⇢ Read More';
+
                 } else {
+
                     $content   = $clean_content;
                     $link_text = '⇢ Read More';
                 }
