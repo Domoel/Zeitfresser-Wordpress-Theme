@@ -862,9 +862,10 @@ function zeitfresser_render_image_optimizer_page() {
             • The tool can be run multiple times without side effects.<br><br>
             
             <strong>Site Icon Exception:</strong><br>
-            The optimizer intentionally excludes the configured WordPress Site Icon from manual optimization and cleanup workflows. This is important because some external applications, crawlers, RSS readers and federated services only support traditional PNG-based favicon assets and may not correctly handle AVIF or WebP icons.<br><br>
+            The optimizer intentionally excludes the configured WordPress Site Icon from manual optimization and cleanup workflows.<br> 
+            This is important because some external applications, crawlers, RSS readers and federated services only support traditional PNG-based favicon assets and may not correctly handle AVIF or WebP icons.<br><br>
 
-            <em><strong>Tip:</strong> You can either automate the process via the Customizer or use this tool manually for full control.</em>
+            <em><strong>Tip:</strong> You can either automate the process via the "Image Optimizer" Settings panel under "Appearance" -> "Customize" or use this tool manually for full control.</em>
         </p>
     </div>
 
