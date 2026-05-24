@@ -314,7 +314,7 @@ add_filter( 'wp_calculate_image_sizes', 'zeitfresser_responsive_image_sizes', 10
  * Register admin page
  */
 function zeitfresser_register_image_optimizer_page() {
-    add_theme_page(
+    add_management_page(
         'Image Optimizer',
         'Image Optimizer',
         'manage_options',
@@ -846,10 +846,8 @@ function zeitfresser_render_image_optimizer_page() {
     
     <div class="notice notice-info" style="max-width:800px;margin-top:20px;">
         <p>
-            <strong>How this tool works</strong><br><br>
-
-            This tool helps you optimize your existing media library for better performance.<br><br>
-
+            <strong>How this tool works:</strong><br>
+            This tool helps you optimize your existing media library for better performance.<br>
             • Images are converted to modern formats (AVIF/WebP) for smaller file sizes.<br>
             • The original file path is safely stored before optimization.<br>
             • Once optimized, original images can be deleted to save disk space.<br><br>
@@ -862,6 +860,9 @@ function zeitfresser_render_image_optimizer_page() {
             • Images are only processed once per version.<br>
             • Original files are only deleted when safe.<br>
             • The tool can be run multiple times without side effects.<br><br>
+            
+            <strong>Site Icon Exception:</strong><br>
+            The optimizer intentionally excludes the configured WordPress Site Icon from manual optimization and cleanup workflows. This is important because some external applications, crawlers, RSS readers and federated services only support traditional PNG-based favicon assets and may not correctly handle AVIF or WebP icons.<br><br>
 
             <em><strong>Tip:</strong> You can either automate the process via the Customizer or use this tool manually for full control.</em>
         </p>
