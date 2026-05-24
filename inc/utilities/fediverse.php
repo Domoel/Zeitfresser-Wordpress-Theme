@@ -73,3 +73,102 @@ function zeitfresser_render_fediverse_meta() {
 
     return $html;
 }
+
+/**
+ * Auto-approve incoming ActivityPub reactions.
+ *
+ * Can be disabled via the ztfr_auto_approve_activitypub_reactions theme mod.
+ *
+ * @param int|string|WP_Error $approved     Comment approval status.
+ * @param array               $comment_data Incoming comment data.
+ * @return int|string|WP_Error
+ */
+
+function zeitfresser_is_activitypub_active() {
+    $active_plugins = (array) get_option( 'active_plugins', array() );
+
+    return in_array( 'activitypub/activitypub.php', $active_plugins, true )
+        || class_exists( '\Activitypub\Comment' );
+}
+
+function zeitfresser_auto_approve_activitypub_reactions( $approved, $comment_data ) {
+
+    if ( 'trash' === $approved || is_wp_error( $approved ) ) {
+        return $approved;
+    }
+
+    if ( ! get_theme_mod( 'ztfr_auto_approve_activitypub_reactions', true ) ) {
+        return $approved;
+    }
+
+    if (
+        empty( $comment_data['comment_meta']['protocol'] ) ||
+        'activitypub' !== $comment_data['comment_meta']['protocol']
+    ) {
+        return $approved;
+    }
+
+    if ( ! class_exists( '\Activitypub\Comment' ) ) {
+        return $approved;
+    }
+
+    $reaction_types   = \Activitypub\Comment::get_comment_type_slugs();
+    $reaction_types[] = 'comment';
+
+    if ( in_array( $comment_data['comment_type'], $reaction_types, true ) ) {
+        return 1;
+    }
+
+    return $approved;
+}
+
+if ( zeitfresser_is_activitypub_active() ) {
+    add_filter(
+        'pre_comment_approved',
+        'zeitfresser_auto_approve_activitypub_reactions',
+        10,
+        2
+    );
+}
+
+function zeitfresser_filter_activitypub_comments_when_disabled( $comments ) {
+
+    if ( zeitfresser_is_activitypub_active() ) {
+        return $comments;
+    }
+
+    return array_filter( $comments, function( $comment ) {
+        $protocol = get_comment_meta( $comment->comment_ID, 'protocol', true );
+
+        return 'activitypub' !== $protocol;
+    });
+}
+
+add_filter(
+    'comments_array',
+    'zeitfresser_filter_activitypub_comments_when_disabled'
+);
+
+function zeitfresser_filter_activitypub_comment_count_when_disabled( $count, $post_id ) {
+
+    if ( zeitfresser_is_activitypub_active() ) {
+        return $count;
+    }
+
+    $activitypub_comments = get_comments( array(
+        'post_id'    => $post_id,
+        'status'     => 'approve',
+        'count'      => true,
+        'meta_key'   => 'protocol',
+        'meta_value' => 'activitypub',
+    ) );
+
+    return max( 0, (int) $count - (int) $activitypub_comments );
+}
+
+add_filter(
+    'get_comments_number',
+    'zeitfresser_filter_activitypub_comment_count_when_disabled',
+    10,
+    2
+);
