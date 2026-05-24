@@ -63,6 +63,32 @@ A dedicated **Performance Tools dashboard** allows you to process existing media
 
 For full control, automation can be configured via the WordPress Customizer. You can choose between manual processing, automatic optimization, or a fully automated workflow that includes cleanup of original images.
 
+### Site Icon / Favicon Compatibility
+
+The optimizer intentionally excludes the configured WordPress Site Icon from manual optimization and cleanup workflows as some online tools cant handle avif / webb
+
+This is important because some external applications, crawlers, RSS readers and federated services only support traditional PNG-based favicon assets and may not correctly handle .avif or .webp files icons.
+
+**Recommended Workflow**
+
+If automatic upload optimization is enabled:
+
+1. Temporarily disable automatic optimization
+2. Upload your PNG favicon / Site Icon
+3. Assign it as the WordPress Site Icon
+4. Re-enable automatic optimization
+
+Once assigned, the Site Icon will automatically be excluded from:
+
+- manual optimization batches
+- cleanup operations
+- optimizer counters
+- pending optimization queries
+
+**Technical Limitation**
+
+During the initial upload process, WordPress does not yet know whether an uploaded image will later become the Site Icon. Because of this, upload-time format conversion cannot safely exclude future Site Icons without globally disabling PNG optimization.
+
 ## 🔤 Local Fonts & Typography System
 
 Zeitfresser uses a fully self-hosted typography system built around Oswald and Roboto.
