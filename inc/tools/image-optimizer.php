@@ -10,6 +10,27 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
+ * Check whether an attachment is currently used as the WordPress Site Icon.
+ *
+ * Site icons should stay in their original format because external clients,
+ * crawlers and apps may only support PNG/ICO-compatible favicon assets.
+ *
+ * @param int $attachment_id Attachment ID.
+ * @return bool
+ */
+function zeitfresser_is_site_icon_attachment( $attachment_id ) {
+    $site_icon_id = (int) get_option( 'site_icon' );
+
+    return $site_icon_id > 0 && (int) $attachment_id === $site_icon_id;
+}
+
+function zeitfresser_get_optimizer_excluded_attachment_ids() {
+    $site_icon_id = (int) get_option( 'site_icon' );
+
+    return $site_icon_id > 0 ? array( $site_icon_id ) : array();
+}
+
+/**
  * ------------------------------------------------------------------------
  * Upload Handling (Original File Tracking)
  * ------------------------------------------------------------------------
@@ -109,7 +130,12 @@ function zeitfresser_mark_new_images_optimized( $metadata, $attachment_id ) {
         return $metadata;
     }
 
+    if ( zeitfresser_is_site_icon_attachment( $attachment_id ) ) {
+        return $metadata;
+    }
+
     $auto_enabled  = get_theme_mod( 'ztfr_auto_optimize', true );
+    
     $force_enabled = ! empty( $GLOBALS['zeitfresser_force_image_optimization'] );
 
     if ( ! $auto_enabled && ! $force_enabled ) {
@@ -140,6 +166,11 @@ function zeitfresser_auto_optimize_on_upload( $metadata, $attachment_id ) {
 
     // Only images
     if ( ! wp_attachment_is_image( $attachment_id ) ) {
+        return $metadata;
+    }
+    
+    // Never optimize the configured WordPress Site Icon.
+    if ( zeitfresser_is_site_icon_attachment( $attachment_id ) ) {
         return $metadata;
     }
 
@@ -182,6 +213,10 @@ add_filter(
 function zeitfresser_auto_delete_original_after_upload( $metadata, $attachment_id ) {
 
     if ( ! wp_attachment_is_image( $attachment_id ) ) {
+        return $metadata;
+    }
+    
+    if ( zeitfresser_is_site_icon_attachment( $attachment_id ) ) {
         return $metadata;
     }
 
@@ -299,6 +334,7 @@ function zeitfresser_get_pending_legacy_images_count() {
         'post_mime_type' => 'image',
         'fields'         => 'ids',
         'posts_per_page' => 1,
+        'post__not_in'   => zeitfresser_get_optimizer_excluded_attachment_ids(),
         'meta_query'     => [
             'relation' => 'OR',
             [
@@ -327,6 +363,7 @@ function zeitfresser_get_total_images_count() {
         'post_mime_type' => 'image',
         'fields'         => 'ids',
         'posts_per_page' => 1,
+        'post__not_in'   => zeitfresser_get_optimizer_excluded_attachment_ids(),
         'no_found_rows'  => false,
     ]);
 
@@ -343,6 +380,7 @@ function zeitfresser_get_total_originals_count() {
         'post_mime_type'=>'image',
         'posts_per_page'=>1,
         'fields'=>'ids',
+        'post__not_in'=> zeitfresser_get_optimizer_excluded_attachment_ids(),
         'meta_query'=>[
             ['key'=>'_zeitfresser_original_file','compare'=>'EXISTS']
         ],
@@ -358,6 +396,7 @@ function zeitfresser_get_remaining_originals_count() {
         'post_mime_type' => 'image',
         'posts_per_page' => 1,
         'fields'         => 'ids',
+        'post__not_in'   => zeitfresser_get_optimizer_excluded_attachment_ids(),
         'meta_query'     => [
             'relation' => 'AND',
             [
@@ -387,6 +426,7 @@ function zeitfresser_get_unoptimized_originals_count() {
         'post_mime_type' => 'image',
         'posts_per_page' => 1,
         'fields'         => 'ids',
+        'post__not_in'   => zeitfresser_get_optimizer_excluded_attachment_ids(),
         'meta_query'     => [
             'relation' => 'AND',
             [
@@ -549,6 +589,7 @@ function zeitfresser_delete_originals_batch( $batch_size = 10 ) {
         'post_mime_type' => 'image',
         'fields'         => 'ids',
         'posts_per_page' => $batch_size,
+        'post__not_in'   => zeitfresser_get_optimizer_excluded_attachment_ids(),
         'meta_query'     => [
             'relation' => 'AND',
             [
@@ -563,6 +604,10 @@ function zeitfresser_delete_originals_batch( $batch_size = 10 ) {
     ]);
 
     foreach ( $query->posts as $attachment_id ) {
+    
+        if ( zeitfresser_is_site_icon_attachment( $attachment_id ) ) {
+            continue;
+        }
 
         $original = get_post_meta( $attachment_id, '_zeitfresser_original_file', true );
 
@@ -628,6 +673,7 @@ function zeitfresser_process_legacy_images_batch( $batch_size = 25 ) {
         'post_mime_type' => 'image',
         'fields'         => 'ids',
         'posts_per_page' => $batch_size,
+        'post__not_in'   => zeitfresser_get_optimizer_excluded_attachment_ids(),
         'meta_query'     => [
             'relation' => 'OR',
             [
@@ -648,6 +694,18 @@ function zeitfresser_process_legacy_images_batch( $batch_size = 25 ) {
     foreach ( $query->posts as $attachment_id ) {
 
         $results['processed']++;
+        
+        // Never optimize the configured WordPress Site Icon.
+        if ( zeitfresser_is_site_icon_attachment( $attachment_id ) ) {
+            update_post_meta(
+                $attachment_id,
+                '_zeitfresser_media_optimized_version',
+                ZEITFRESSER_IMAGE_OPTIMIZATION_VERSION
+            );
+
+            $results['skipped']++;
+            continue;
+        }
 
         $file = get_attached_file( $attachment_id );
 
@@ -699,7 +757,6 @@ function zeitfresser_ajax_optimize_images() {
 
     $pending             = zeitfresser_get_pending_legacy_images_count();
     $total               = zeitfresser_get_total_images_count();
-
     $cleanup_total       = zeitfresser_get_total_originals_count();
     $cleanup_remaining   = zeitfresser_get_remaining_originals_count();
     $cleanup_unoptimized = zeitfresser_get_unoptimized_originals_count();
