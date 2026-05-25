@@ -2151,8 +2151,7 @@ header.page-header h1 {
 }
 
 .fediverse-rss-text a {
-    color: var(--hover-color);
-    text-decoration: underline;
+    text-decoration: none !important;
 }
 
 .fediverse-rss-link-container {
