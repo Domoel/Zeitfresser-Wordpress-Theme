@@ -1972,6 +1972,20 @@ header.page-header h1 {
   visibility: hidden;
 }
 
+/* Fediverse Reactions Styles */
+
+.fediverse-comment-link,
+.fediverse-reaction-link {
+    transition: color 0.2s ease;
+}
+
+.fediverse-comment-link:hover,
+.fediverse-comment-link:focus,
+.fediverse-reaction-link:hover,
+.fediverse-reaction-link:focus {
+    color: var(--hover-color) !important;
+}
+
 /* Fediverse RSS Feed Widget Styles */
 
 .fediverse-rss-widget {

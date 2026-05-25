@@ -39,13 +39,17 @@ $has_floating_toc = ! empty( $toc_payload['items'] );
             <!-- Comments (TRUE) -->
             <span class="comments">
                 <a
+                    class="fediverse-comment-link"
                     href="<?php echo esc_url( get_comments_link() ); ?>"
                     title="<?php esc_attr_e( 'Jump to comments', 'zeitfresser' ); ?>"
                     style="display:inline-flex; align-items:center; gap:4px; color:inherit; text-decoration:none; vertical-align:middle;"
                 >
                     <svg style="display:block;" width="20px" height="20px" viewBox="0 0 24 24">
                         <g>
-                            <path d="M17,3.25H7A4.756,4.756,0,0,0,2.25,8V21a.75.75,0,0,0,1.28.53l2.414-2.414a1.246,1.246,0,0,1,.885-.366H17A4.756,4.756,0,0,0,21.75,14V8A4.756,4.756,0,0,0,17,3.25Z"/>
+                            <path
+                                fill="currentColor"
+                                d="M17,3.25H7A4.756,4.756,0,0,0,2.25,8V21a.75.75,0,0,0,1.28.53l2.414-2.414a1.246,1.246,0,0,1,.885-.366H17A4.756,4.756,0,0,0,21.75,14V8A4.756,4.756,0,0,0,17,3.25Z"
+                            />
                         </g>
                     </svg>
 
@@ -60,7 +64,7 @@ $has_floating_toc = ! empty( $toc_payload['items'] );
                 }
                 ?>
             </span>
-        </div>
+        </div>          
 
         <!-- Featured Image (FALSE → entfernt) -->
 
