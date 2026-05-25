@@ -2082,7 +2082,7 @@ header.page-header h1 {
 }
 
 .fediverse-rss-name-line strong {
-    color: #f0f6fc;
+    color: var(--light-color);
     font-size: 14px;
     display: inline;
     text-transform: capitalize;
@@ -2099,7 +2099,7 @@ header.page-header h1 {
 }
 
 .fediverse-rss-handle-line span {
-    color: #8b949e;
+    color: var(--muted-color);
     font-size: 13px;
     display: inline;
     text-transform: none;
@@ -2124,7 +2124,7 @@ header.page-header h1 {
     width: 100%;
     font-size: 14px;
     line-height: 1.5;
-    color: #e6edf3;
+    color: var(--light-color);
     overflow-wrap: break-word;
     word-wrap: break-word;
     word-break: break-word;
@@ -2151,7 +2151,7 @@ header.page-header h1 {
 }
 
 .fediverse-rss-text a {
-    color: #bd93f9;
+    color: var(--hover-color);
     text-decoration: underline;
 }
 
@@ -2163,7 +2163,7 @@ header.page-header h1 {
 }
 
 .fediverse-rss-link-container a {
-    color: #bd93f9;
+    color: var(--hover-color);
     text-decoration: none;
     font-weight: 500;
     display: inline-block;

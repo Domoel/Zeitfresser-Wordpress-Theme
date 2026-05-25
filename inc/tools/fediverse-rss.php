@@ -206,7 +206,7 @@ function gts_fediverse_style_feed() {
     ?>
     <div class="fediverse-rss-widget">
         <?php if ( $maxitems == 0 ) : ?>
-            <p class="fediverse-rss-no-posts">No Posts found!.</p>
+            <p class="fediverse-rss-no-posts">No Posts found!</p>
         <?php else : ?>
             <?php
             $current_item = 0;
