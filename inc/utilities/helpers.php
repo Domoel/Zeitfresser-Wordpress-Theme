@@ -51,31 +51,6 @@ if ( ! function_exists( 'zeitfresser_get_post_card_excerpt_length' ) ) {
     }
 }
 
-if ( ! function_exists( 'zeitfresser_fs' ) ) {
-    /**
-     * Lightweight Freemius compatibility stub.
-     *
-     * The original premium theme used Freemius checks to gate premium-only controls.
-     * Zeitfresser ships as a self-contained theme, so we keep a tiny compatibility
-     * object instead of loading the full SDK.
-     *
-     * @return object
-     */
-    function zeitfresser_fs() {
-        static $stub = null;
-
-        if ( null === $stub ) {
-            $stub = new class() {
-                public function is__premium_only() {
-                    return true;
-                }
-            };
-        }
-
-        return $stub;
-    }
-}
-
 if ( ! function_exists( 'zeitfresser_get_social_defaults' ) ) {
     /**
      * Return default social profile URLs.
@@ -172,26 +147,6 @@ if ( ! function_exists( 'zeitfresser_social_icon_svg' ) ) {
     }
 }
 
-
-/**
- * Backward-compatible Freemius helper alias.
- *
- * @return object
- */
-function db_fs() {
-    return zeitfresser_fs();
-}
-
-
-/**
- * Backward-compatible social default alias.
- *
- * @param string $social_key Social service key.
- * @return string
- */
-function graphthemes_get_social_link_default( $social_key ) {
-    return zeitfresser_get_social_link_default( $social_key );
-}
 
 /**
  * Get asset URL with version (cache busting).

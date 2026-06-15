@@ -27,23 +27,6 @@ add_action( 'customize_register', 'zeitfresser_social_links' );
 function zeitfresser_social_links( $wp_customize ) {
 
     /**
-     * 🔥 Heading Control (falls noch nicht vorhanden)
-     */
-    if ( class_exists( 'WP_Customize_Control' ) && ! class_exists( 'ZTFR_Customize_Heading_Control' ) ) {
-        class ZTFR_Customize_Heading_Control extends WP_Customize_Control {
-            public $type = 'ztfr-heading';
-
-            public function render_content() {
-                ?>
-                <span style="display:block; font-weight:600; font-size:14px; margin:15px 0 5px;">
-                    <?php echo esc_html( $this->label ); ?>
-                </span>
-                <?php
-            }
-        }
-    }
-
-    /**
      * ------------------------
      * SOCIAL HEADING
      * ------------------------

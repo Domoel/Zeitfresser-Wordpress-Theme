@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', function () {
     var scrollToTop = document.querySelector('.scroll-to-top');
     var navToggle = document.getElementById('nav-icon3');
-    var grid = document.querySelector('.blog-grid-view');
 
     function updateScrollButton() {
         if (!scrollToTop) {
@@ -29,12 +28,6 @@ document.addEventListener('DOMContentLoaded', function () {
     if (navToggle) {
         navToggle.addEventListener('click', function () {
             navToggle.classList.toggle('open');
-        });
-    }
-
-    if (grid && typeof Masonry !== 'undefined') {
-        new Masonry(grid, {
-            itemSelector: '.type-post'
         });
     }
 });

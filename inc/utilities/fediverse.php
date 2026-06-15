@@ -85,10 +85,18 @@ function zeitfresser_render_fediverse_meta() {
  */
 
 function zeitfresser_is_activitypub_active() {
+    static $active = null;
+
+    if ( null !== $active ) {
+        return $active;
+    }
+
     $active_plugins = (array) get_option( 'active_plugins', array() );
 
-    return in_array( 'activitypub/activitypub.php', $active_plugins, true )
+    $active = in_array( 'activitypub/activitypub.php', $active_plugins, true )
         || class_exists( '\Activitypub\Comment' );
+
+    return $active;
 }
 
 function zeitfresser_auto_approve_activitypub_reactions( $approved, $comment_data ) {
@@ -155,15 +163,21 @@ function zeitfresser_filter_activitypub_comment_count_when_disabled( $count, $po
         return $count;
     }
 
-    $activitypub_comments = get_comments( array(
-        'post_id'    => $post_id,
-        'status'     => 'approve',
-        'count'      => true,
-        'meta_key'   => 'protocol',
-        'meta_value' => 'activitypub',
-    ) );
+    static $cache = array();
 
-    return max( 0, (int) $count - (int) $activitypub_comments );
+    $post_id = (int) $post_id;
+
+    if ( ! isset( $cache[ $post_id ] ) ) {
+        $cache[ $post_id ] = (int) get_comments( array(
+            'post_id'    => $post_id,
+            'status'     => 'approve',
+            'count'      => true,
+            'meta_key'   => 'protocol',
+            'meta_value' => 'activitypub',
+        ) );
+    }
+
+    return max( 0, (int) $count - $cache[ $post_id ] );
 }
 
 add_filter(

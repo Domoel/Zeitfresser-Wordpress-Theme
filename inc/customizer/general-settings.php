@@ -10,23 +10,6 @@ add_action( 'customize_register', 'zeitfresser_general_options' );
 function zeitfresser_general_options( $wp_customize ) {
 
     /**
-     * 🔥 Custom Heading Control
-     */
-    if ( class_exists( 'WP_Customize_Control' ) ) {
-        class ZTFR_Customize_Heading_Control extends WP_Customize_Control {
-            public $type = 'ztfr-heading';
-
-            public function render_content() {
-                ?>
-                <span style="display:block; font-weight:600; font-size:14px; margin:15px 0 5px;">
-                    <?php echo esc_html( $this->label ); ?>
-                </span>
-                <?php
-            }
-        }
-    }
-
-    /**
      * General Section
      */
     if ( ! $wp_customize->get_section( 'ztfr_general' ) ) {
