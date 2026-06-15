@@ -33,34 +33,65 @@ add_filter( 'script_loader_tag', 'zeitfresser_defer_scripts', 10, 3 );
  
 /**
  * ------------------------------------------------------------------------
- * Image Loading Optimization (LCP + Lazy Loading)
+ * Image attribute optimization (LCP, lazy loading, CLS, fetch priority)
  * ------------------------------------------------------------------------
  *
- * Ensures the first visible image loads immediately (LCP),
- * while all other images are lazy-loaded for performance.
+ * Single pass over wp_get_attachment_image_attributes:
+ * - backfills width/height for layout stability (runs everywhere, incl. admin)
+ * - first visible image loads eagerly (LCP), the rest lazily
+ * - first image on singular views gets fetchpriority="high"
+ *
+ * @param array        $attr       Image markup attributes.
+ * @param WP_Post      $attachment Attachment post object.
+ * @param string|array $size       Requested image size.
+ * @return array
  */
-function zeitfresser_optimize_image_attributes( $attr, $attachment, $size ) {
+function zeitfresser_image_attributes( $attr, $attachment, $size ) {
 
+    // Backfill missing dimensions for layout stability (CLS).
+    if ( empty( $attr['width'] ) || empty( $attr['height'] ) ) {
+        $metadata = wp_get_attachment_metadata( $attachment->ID );
+
+        if ( is_array( $metadata ) && ! empty( $metadata['width'] ) && ! empty( $metadata['height'] ) ) {
+            if ( empty( $attr['width'] ) ) {
+                $attr['width'] = (int) $metadata['width'];
+            }
+
+            if ( empty( $attr['height'] ) ) {
+                $attr['height'] = (int) $metadata['height'];
+            }
+        }
+    }
+
+    if ( is_admin() ) {
+        return $attr;
+    }
+
+    // Loading strategy: first image eager (LCP), all others lazy.
     static $is_first = true;
 
-    if ( ! is_admin() ) {
+    if ( $is_first ) {
+        $attr['loading'] = 'eager';
+        $is_first        = false;
+    } else {
+        $attr['loading'] = 'lazy';
+    }
 
-        if ( $is_first ) {
-            // First image (critical for LCP)
-            $attr['loading'] = 'eager';
-            $is_first = false;
-        } else {
-            // All other images
-            $attr['loading'] = 'lazy';
+    $attr['decoding'] = 'async';
+
+    // First image on singular views is the likely LCP element.
+    if ( empty( $attr['fetchpriority'] ) && ! is_feed() ) {
+        static $did_set_high_priority = false;
+
+        if ( ! $did_set_high_priority && is_singular() ) {
+            $attr['fetchpriority']  = 'high';
+            $did_set_high_priority = true;
         }
-
-        // Improve decoding performance
-        $attr['decoding'] = 'async';
     }
 
     return $attr;
 }
-add_filter( 'wp_get_attachment_image_attributes', 'zeitfresser_optimize_image_attributes', 10, 3 );
+add_filter( 'wp_get_attachment_image_attributes', 'zeitfresser_image_attributes', 10, 3 );
 
 /**
  * Lower the threshold for WordPress scaled originals when auto optimization is enabled.
@@ -107,43 +138,6 @@ function zeitfresser_filter_intermediate_image_sizes( $sizes ) {
 add_filter( 'intermediate_image_sizes_advanced', 'zeitfresser_filter_intermediate_image_sizes' );
 
 /**
- * Improve attachment image attributes for layout stability and fetch priority.
- *
- * @param array        $attr       Image markup attributes.
- * @param WP_Post      $attachment Attachment post object.
- * @param string|array $size       Requested image size.
- * @return array
- */
-function zeitfresser_improve_attachment_dimensions( $attr, $attachment, $size ) {
-
-    if ( empty( $attr['width'] ) || empty( $attr['height'] ) ) {
-        $metadata = wp_get_attachment_metadata( $attachment->ID );
-
-        if ( is_array( $metadata ) && ! empty( $metadata['width'] ) && ! empty( $metadata['height'] ) ) {
-            if ( empty( $attr['width'] ) ) {
-                $attr['width'] = (int) $metadata['width'];
-            }
-
-            if ( empty( $attr['height'] ) ) {
-                $attr['height'] = (int) $metadata['height'];
-            }
-        }
-    }
-
-    if ( empty( $attr['fetchpriority'] ) && ! is_admin() && ! is_feed() ) {
-        static $did_set_high_priority = false;
-
-        if ( ! $did_set_high_priority && is_singular() ) {
-            $attr['fetchpriority'] = 'high';
-            $did_set_high_priority = true;
-        }
-    }
-
-    return $attr;
-}
-add_filter( 'wp_get_attachment_image_attributes', 'zeitfresser_improve_attachment_dimensions', 11, 3 );
-
-/**
  * ------------------------------------------------------------------------
  * Preload critical fonts
  * ------------------------------------------------------------------------
@@ -153,12 +147,10 @@ add_filter( 'wp_get_attachment_image_attributes', 'zeitfresser_improve_attachmen
  */
 function zeitfresser_preload_fonts() {
     ?>
-    <!-- Critical Fonts Only -->
-    <link rel="preload" href="<?php echo zeitfresser_asset('/fonts/oswald-400.woff2'); ?>" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="<?php echo zeitfresser_asset('/fonts/oswald-700.woff2'); ?>" as="font" type="font/woff2" crossorigin>
+    <!-- Above-the-fold fonts only: body text (Roboto 400) + headings/post title (Oswald 500). -->
+    <!-- All other weights load on demand via font-display: swap. -->
     <link rel="preload" href="<?php echo zeitfresser_asset('/fonts/roboto-400.woff2'); ?>" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="<?php echo zeitfresser_asset('/fonts/roboto-500.woff2'); ?>" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="<?php echo zeitfresser_asset('/fonts/roboto-700.woff2'); ?>" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="<?php echo zeitfresser_asset('/fonts/oswald-500.woff2'); ?>" as="font" type="font/woff2" crossorigin>
     <?php
 }
 add_action('wp_head', 'zeitfresser_preload_fonts', 0);
@@ -199,6 +191,49 @@ function zeitfresser_inline_critical_css() {
     <?php
 }
 add_action('wp_head', 'zeitfresser_inline_critical_css', 1);
+
+/**
+ * ------------------------------------------------------------------------
+ * Speculation Rules: prerender same-origin links on hover
+ * ------------------------------------------------------------------------
+ *
+ * Enables near-instant navigation via the Speculation Rules API. Links are
+ * prerendered on hover/pointerdown ("moderate" eagerness). Dynamic URLs
+ * (query strings), admin/login URLs, nofollow and new-tab links are excluded;
+ * add the .no-prerender class to opt a link out.
+ *
+ * WordPress 6.8+ ships native Speculative Loading, so we only output our own
+ * rules on older versions to avoid duplicate hints.
+ */
+function zeitfresser_speculation_rules() {
+
+    if ( is_admin() || is_feed() ) {
+        return;
+    }
+
+    if ( version_compare( get_bloginfo( 'version' ), '6.8', '>=' ) ) {
+        return;
+    }
+
+    $rules = array(
+        'prerender' => array(
+            array(
+                'source'    => 'document',
+                'where'     => array(
+                    'and' => array(
+                        array( 'href_matches' => '/*' ),
+                        array( 'not' => array( 'href_matches' => array( '/wp-login.php*', '/wp-admin/*' ) ) ),
+                        array( 'not' => array( 'selector_matches' => "[rel~=nofollow], [href*='?'], [target=_blank], .no-prerender" ) ),
+                    ),
+                ),
+                'eagerness' => 'moderate',
+            ),
+        ),
+    );
+
+    echo '<script type="speculationrules">' . wp_json_encode( $rules ) . '</script>' . "\n";
+}
+add_action( 'wp_head', 'zeitfresser_speculation_rules' );
 
 function zeitfresser_performance_setup() {
     if ( ! is_admin() ) {

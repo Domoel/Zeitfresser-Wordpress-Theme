@@ -37,7 +37,7 @@ function gts_fediverse_absolute_url( $url, $base_url ) {
     return $base['scheme'] . '://' . $base['host'] . '/' . ltrim( $url, '/' );
 }
 
-function gts_fediverse_get_avatar( $feed_url, $profile_url ) {
+function gts_fediverse_get_avatar( $feed_url, $profile_url, $rss = null ) {
     $fallback_avatar = gts_fediverse_default_avatar();
     $cache_key       = 'gts_fediverse_avatar_raw_' . md5( $feed_url );
     $cached          = get_transient( $cache_key );
@@ -48,18 +48,12 @@ function gts_fediverse_get_avatar( $feed_url, $profile_url ) {
 
     $avatar_url = '';
 
-    $rss_response = wp_remote_get( $feed_url, array(
-        'timeout' => 8,
-        'headers' => array(
-            'User-Agent' => 'Mozilla/5.0 Zeitfresser-Fediverse-Widget/1.0',
-        ),
-    ) );
+    // Reuse the channel image from the already-fetched feed (avoids a second request).
+    if ( $rss && ! is_wp_error( $rss ) && method_exists( $rss, 'get_image_url' ) ) {
+        $image_url = $rss->get_image_url();
 
-    if ( ! is_wp_error( $rss_response ) && wp_remote_retrieve_response_code( $rss_response ) === 200 ) {
-        $xml = wp_remote_retrieve_body( $rss_response );
-
-        if ( preg_match( '/<image>.*?<url>\s*(http[^<]+)\s*<\/url>.*?<\/image>/is', $xml, $matches ) ) {
-            $avatar_url = trim( $matches[1] );
+        if ( ! empty( $image_url ) ) {
+            $avatar_url = trim( $image_url );
         }
     }
 
@@ -176,7 +170,7 @@ function gts_fediverse_style_feed() {
 
     $maxitems     = $rss->get_item_quantity( $max_posts );
     $rss_items    = $rss->get_items( 0, $maxitems );
-    $avatar_url   = gts_fediverse_get_avatar( $feed_url, $profile_url );
+    $avatar_url   = gts_fediverse_get_avatar( $feed_url, $profile_url, $rss );
     $display_name = ! empty( $custom_display_name ) ? $custom_display_name : '';
 
     if ( $maxitems > 0 ) {

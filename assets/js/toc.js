@@ -27,11 +27,10 @@ document.addEventListener('DOMContentLoaded', function () {
     var desktopQuery = window.matchMedia('(min-width: 1500px)');
     var stickyTop = 100;
     var ticking = false;
-    var isScrollingFromClick = false;
-    var tocBottomOffset = null;
     var cachedSidebar = null;
     var headings = getHeadings();
-    var calculatedTocTop = stickyTop; 
+    var calculatedTocTop = stickyTop;
+    var lastActiveId = null;
 
     function isDesktop() {
         return desktopQuery.matches;
@@ -53,12 +52,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function getTocBottomOffset() {
-        if (tocBottomOffset !== null) return tocBottomOffset;
-        var value = getComputedStyle(document.documentElement)
-            .getPropertyValue('--toc-bottom-offset')
-            .trim();
-        tocBottomOffset = parseInt(value, 10) || 12;
-        return tocBottomOffset;
+        return 12;
     }
 
     function getRealSidebar() {
@@ -80,9 +74,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function syncPosition() {
-        var isAdminBarActive = document.body.classList.contains('logged-in');
-        var currentStickyTop = isAdminBarActive ? (stickyTop + 32) : stickyTop;
-    
         if (!isDesktop()) {
             calculatedTocTop = stickyTop;
             document.documentElement.style.setProperty('--zeitfresser-toc-top', stickyTop + 'px');
@@ -166,9 +157,7 @@ document.addEventListener('DOMContentLoaded', function () {
             link.classList.toggle('is-active', active);
             if (active) {
                 link.setAttribute('aria-current', 'true');
-                if (!isScrollingFromClick) {
-                    link.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                }
+                link.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             } else {
                 link.removeAttribute('aria-current');
             }
@@ -188,7 +177,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function updateActiveHeading() {
-        if (!headings.length || isScrollingFromClick) return;
+        if (!headings.length) return;
         
         var triggerY = calculatedTocTop + 40; 
         
@@ -215,20 +204,35 @@ document.addEventListener('DOMContentLoaded', function () {
             currentId = headings[headings.length - 1].target.id;
         }
 
-        setActiveLink(currentId);
+        if (currentId !== lastActiveId) {
+            lastActiveId = currentId;
+            setActiveLink(currentId);
+        }
     }
 
-    function onViewportChange() {
+    // syncPosition() is scroll-invariant (its inputs depend only on layout), so
+    // it only runs on resize/load. Scroll frames do the scroll-dependent work.
+    function update(includeLayout) {
         if (ticking) return;
         ticking = true;
 
         window.requestAnimationFrame(function () {
-            syncPosition();
+            if (includeLayout) {
+                syncPosition();
+            }
             handleFooterCollision();
             updateProgress();
             updateActiveHeading();
             ticking = false;
         });
+    }
+
+    function onScroll() {
+        update(false);
+    }
+
+    function onResize() {
+        update(true);
     }
 
     links.forEach(function (link) {
@@ -261,7 +265,7 @@ document.addEventListener('DOMContentLoaded', function () {
         toc.classList.add('is-visible');
     });
 
-    window.addEventListener('scroll', onViewportChange, { passive: true });
-    window.addEventListener('resize', onViewportChange, { passive: true });
-    window.addEventListener('load', syncPosition);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onResize, { passive: true });
+    window.addEventListener('load', onResize);
 });
