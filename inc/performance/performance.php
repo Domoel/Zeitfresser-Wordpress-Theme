@@ -158,25 +158,10 @@ function zeitfresser_preload_fonts() {
     <link rel="preload" href="<?php echo zeitfresser_asset('/fonts/oswald-700.woff2'); ?>" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="<?php echo zeitfresser_asset('/fonts/roboto-400.woff2'); ?>" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="<?php echo zeitfresser_asset('/fonts/roboto-500.woff2'); ?>" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="<?php echo zeitfresser_asset('/fonts/roboto-700.woff2'); ?>" as="font" type="font/woff2" crossorigin>
     <?php
 }
 add_action('wp_head', 'zeitfresser_preload_fonts', 0);
-
-/**
- * Optimize font loading with preconnect
- */
-add_filter( 'wp_resource_hints', function( $urls, $relation_type ) {
-
-    if ( 'preconnect' === $relation_type ) {
-        $urls[] = [
-            'href'        => get_template_directory_uri(),
-            'crossorigin' => 'anonymous',
-        ];
-    }
-
-    return $urls;
-
-}, 10, 2 );
 
 /**
  * ------------------------------------------------------------------------
@@ -209,10 +194,6 @@ function zeitfresser_inline_critical_css() {
 
         .custom-grid-view {
             display: grid;
-        }
-
-        header.site-header {
-            background: var(--light-color);
         }
     </style>
     <?php

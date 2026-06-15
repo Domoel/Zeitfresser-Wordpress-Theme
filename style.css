@@ -374,11 +374,6 @@ textarea {
   margin-bottom: 1rem;
 }
 
-h1, h2, h3 {
-  font-family: var(--primary-font);
-  font-weight: 400;
-}
-
 h1 { font-size: 2.488rem; line-height: 1.4; }
 h2 { font-size: 2.074rem; line-height: 1.2; }
 h3 { font-size: 1.6rem;   line-height: 1.2; }
